@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "twig-server"
+version = "0.1.0"
+license = "GNU-AGPLv3"
+readme = "README.md"
+description = "Server backing TWIG"
+authors = ["Robert <xiurobert@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+Flask = "^2.2.2"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[tool.black]
+line-length = 79
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
