@@ -11,6 +11,7 @@ python = "^3.9.9"
 Flask = "^2.2.2"
 neo4j = "^4.4.5"
 python-dotenv = "^0.20.0"
+neomodel = "^4.0.8"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
