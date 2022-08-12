@@ -1,13 +1,5 @@
+from twig_server.database.Native import Node, Relationship
 from twig_server.neo4j import neo4j_driver
-
-class Node:
-    def __init__(self):
-        return
-    def extractNode(self, res): # for queries that are meant to return a single node
-        row = res.single() 
-        if(row): row = row[0]
-        else: return None
-        return row
 
 class User(Node):
     label_name = 'User'
@@ -16,7 +8,7 @@ class User(Node):
         self.uid = None # id() in the database
         self.username = username # unique username
         try:
-            self.dbObj = self.query_username()
+            self.query_username()
         except:
             self.dbObj = None
     
@@ -28,7 +20,7 @@ class User(Node):
         self.dbObj = self.extractNode(res)
         return self.dbObj
 
-    def query_id(self):  # query a User by uid
+    def query_uid(self):  # query a User by uid
         if (self.uid == None):
             raise Exception("ID is None")
         queryStr = f"MATCH (n:{User.label_name}) WHERE id(n)=$uid RETURN n"
@@ -41,9 +33,10 @@ class User(Node):
         queryStr = f"CREATE (n:{User.label_name}) SET n.username=$username RETURN n"
         res = neo4j_driver.session().run(queryStr, {"username": self.username})
         self.dbObj = self.extractNode(res)
+        # TODO set uid and properties
         return self.dbObj
 
-    def delete_id(self): # delete a user by ID
+    def delete_uid(self): # delete a user by ID
         queryStr = f"MATCH (n:{User.label_name}) WHERE id(n)=$uid DETACH DELETE n"
         neo4j_driver.session().run(queryStr, {"uid": self.uid})
         self.dbObj = None
