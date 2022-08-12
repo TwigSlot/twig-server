@@ -9,9 +9,12 @@ authors = ["Robert <xiurobert@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.10"
 Flask = "^2.2.2"
+neo4j = "^4.4.5"
+python-dotenv = "^0.20.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
+black = "^22.6.0"
 
 [tool.black]
 line-length = 79
