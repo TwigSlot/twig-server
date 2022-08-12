@@ -7,7 +7,7 @@ description = "Server backing TWIG"
 authors = ["Robert <xiurobert@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.9.9"
 Flask = "^2.2.2"
 neo4j = "^4.4.5"
 python-dotenv = "^0.20.0"
