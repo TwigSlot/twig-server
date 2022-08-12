@@ -2,6 +2,7 @@ import neo4j
 from flask import Flask
 
 from twig_server.neo4j import neo4j_driver
+from twig_server.database.User import Node, User
 
 app = Flask(__name__)
 app.config["NEO4J_DRIVER"]: neo4j.GraphDatabase = neo4j_driver
@@ -16,11 +17,14 @@ def index():
 
 @app.route("/query/<username>")
 def query_user(username: str):
-    query_stmt = "MATCH (n:User) WHERE n.username = $username  RETURN n"
-
-    res = neo4j_driver.session().run(query_stmt, {"username": username})
+    user = User(username)
+    res = user.query_username()
+    if(res):
     # todo: capture and deserialize the result of the query
-    return query_stmt
+        return res._properties['username']
+    else:
+        res = user.create()
+        return 'created user ' + res._properties['username']
 
 
 def create_app():
