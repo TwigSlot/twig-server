@@ -4,7 +4,7 @@ version = "0.1.0"
 license = "GNU-AGPLv3"
 readme = "README.md"
 description = "Server backing TWIG"
-authors = ["Robert <xiurobert@gmail.com>"]
+authors = ["TWIGSLOT Team <twigslot@tchlabs.net>"]
 
 [tool.poetry.dependencies]
 python = "^3.9.9"
