@@ -1,4 +1,7 @@
 {
-  "image": "mcr.microsoft.com/vscode/devcontainers/python:3.10",
+  "name": "twig-server",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
   "forwardPorts": [5000]
 }
