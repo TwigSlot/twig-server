@@ -10,7 +10,8 @@ app.config["NEO4J_DRIVER"]: neo4j.GraphDatabase = neo4j_driver
 
 # /:username -> MATCH (n:User) WHERE n.username = username RETURN n
 
-@app.route('/')
+
+@app.route("/")
 def index():
     return "Index"
 
@@ -19,15 +20,16 @@ def index():
 def query_user(username: str):
     user = User(username)
     res = user.query_username()
-    if(res):
-    # todo: capture and deserialize the result of the query
-        return res._properties['username']
+    if res:
+        # todo: capture and deserialize the result of the query
+        return res._properties["username"]
     else:
         res = user.create()
-        return 'created user ' + res._properties['username']
+        return "created user " + res._properties["username"]
 
 
 def create_app():
     from dotenv import load_dotenv
+
     load_dotenv()
     return app
