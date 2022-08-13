@@ -1,7 +1,3 @@
-from dotenv import load_dotenv
-
-load_dotenv()
-
 from twig_server.database.User import User
 from twig_server.neo4j import neo4j_driver
 
