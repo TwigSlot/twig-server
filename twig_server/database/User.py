@@ -22,7 +22,9 @@ class User(Node):
         queryStr = (
             f"MATCH (n:{User.label_name}) WHERE n.username=$username RETURN n"
         )
-        res = self.db_conn.conn.session().run(queryStr, {"username": self.username})
+        res = self.db_conn.conn.session().run(
+            queryStr, {"username": self.username}
+        )
         self.dbObj = self.extractNode(res)
         return self.dbObj
 
@@ -39,7 +41,9 @@ class User(Node):
         queryStr = (
             f"CREATE (n:{User.label_name}) SET n.username=$username RETURN n"
         )
-        res = self.db_conn.conn.session().run(queryStr, {"username": self.username})
+        res = self.db_conn.conn.session().run(
+            queryStr, {"username": self.username}
+        )
         self.dbObj = self.extractNode(res)
         # TODO set uid and properties
         return self.dbObj
