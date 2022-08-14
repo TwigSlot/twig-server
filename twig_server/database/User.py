@@ -5,47 +5,30 @@ from twig_server.database.connection import Neo4jConnection
 class User(Node):
     label_name = "User"
 
-    def __init__(self, username: str):
-        super().__init__()
-        self.uid = None  # id() in the database
-        self.username = username  # unique username
-        self.db_conn = Neo4jConnection()
-        self.db_conn.connect()
-        try:
+    def __init__(self, conn, **kwargs):
+        uid = kwargs.get('uid', None) 
+        self.username = kwargs.get('username', None)
+        super().__init__(conn, uid)
+        if(self.username != None):
             self.query_username()
-        except:
-            self.dbObj = None
 
     def query_username(self):  # query a User by username
-        if self.username == None:
-            raise Exception("Username is None")
+        if(self.username == None): return
         queryStr = (
             f"MATCH (n:{User.label_name}) WHERE n.username=$username RETURN n"
         )
-        res = self.db_conn.conn.session().run(
-            queryStr, {"username": self.username}
-        )
-        self.dbObj = self.extractNode(res)
+        with self.db_conn.session() as session:
+            res = session.run(
+                queryStr, {"username": self.username}
+            )
+            self.dbObj = self.extractNode(res)
+            self.syncProperties()
         return self.dbObj
 
-    def query_uid(self):  # query a User by uid
-        if self.uid == None:
-            raise Exception("ID is None")
-        queryStr = f"MATCH (n:{User.label_name}) WHERE id(n)=$uid RETURN n"
-        res = self.db_conn.conn.session().run(queryStr, {"uid": self.uid})
-        return res.single()[0]
-
     def create(self):  # create a new User in the database
-        if self.dbObj != None:
-            return self.dbObj  # already created in database
-        queryStr = (
-            f"CREATE (n:{User.label_name}) SET n.username=$username RETURN n"
-        )
-        res = self.db_conn.conn.session().run(
-            queryStr, {"username": self.username}
-        )
-        self.dbObj = self.extractNode(res)
-        # TODO set uid and properties
+        super().create(User.label_name)
+        self.set('username', self.username)
+        
         return self.dbObj
 
     def delete_uid(self):  # delete a user by ID

@@ -25,7 +25,7 @@ def create_resource(connection):
 
     assert Resource(connection, uid).query_uid() == None
 
-def test_resource_creation(create_resource):
+def test_create_resource(create_resource):
     assert create_resource != None
 
 def test_resource_query(create_resource):

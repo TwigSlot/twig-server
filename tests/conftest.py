@@ -5,7 +5,7 @@ from twig_server.database.connection import Neo4jConnection
 from flask import current_app
 import os
 
-if os.getenv("_PYTEST_RAISE", "0") != "0":
+if os.getenv("_PYTEST_RAISE", "0") != "0": # for pytest debugging to work, do not execute in vscode! use launch.json instead
     @pytest.hookimpl(tryfirst=True)
     def pytest_exception_interact(call):
         raise call.excinfo.value
