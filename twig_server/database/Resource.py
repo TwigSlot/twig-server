@@ -1,4 +1,4 @@
-from twig_server.neo4j import neo4j_driver
+from twig_server.database.connection import Neo4jConnection
 from twig_server.database.Native import Node, Relationship
 
 
@@ -12,6 +12,8 @@ class Resource(Node):
         self.properties = {"uid": uid}
         self.uid = None
         self.query_uid()  # try to retrieve existing database info
+        self.db_conn = Neo4jConnection()
+        self.db_conn.connect()
         if self.dbObj == None:
             self.create()
 
@@ -19,7 +21,7 @@ class Resource(Node):
         if self.uid == None:
             return None
         queryStr = f"MATCH (n:{Resource.label_name}) WHERE id(n)=$uid RETURN n"
-        res = neo4j_driver.session().run(queryStr, {"uid": self.uid})
+        res = self.db_conn.conn.session().run(queryStr, {"uid": self.uid})
         self.dbObj = self.extractNode(res)
         return self.dbObj
 
@@ -27,6 +29,6 @@ class Resource(Node):
         if self.uid != None:  # should be already created
             return self.dbObj
         queryStr = f"CREATE (n:{Resource.label_name}) RETURN n"
-        res = neo4j_driver.session().run(queryStr, {"uid": self.uid})
+        res = self.db_conn.conn.session().run(queryStr, {"uid": self.uid})
         self.dbObj = self.extractNode(res)
         return self.dbObj
