@@ -1,9 +1,11 @@
 from twig_server.database.User import User
-from twig_server.neo4j import neo4j_driver
+from twig_server.database.connection import Neo4jConnection
 
 
 def test_driver_connectivity():
-    neo4j_driver.verify_connectivity()
+    drv = Neo4jConnection()
+    drv.connect()
+    drv.conn.verify_connectivity()
 
 
 def test_database_user_query_username():
