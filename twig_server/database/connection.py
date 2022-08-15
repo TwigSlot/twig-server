@@ -3,6 +3,7 @@ from typing import Optional
 
 from neo4j import GraphDatabase, Neo4jDriver
 
+
 class Neo4jConnection:
     def __init__(self, username, password, url):
         self.username = username

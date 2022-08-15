@@ -6,32 +6,31 @@ from twig_server.database.User import User
 import os
 
 
-def create_app(test_config = None):
+def create_app(test_config=None):
     from dotenv import load_dotenv
+
     load_dotenv()
     app = Flask(__name__)
     app.config.from_mapping(
-        NEO4J_USERNAME = os.getenv("NEO4J_USERNAME"),
-        NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD"),
-        NEO4J_SERVER_URL = os.getenv("NEO4J_SERVER_URL"),
+        NEO4J_USERNAME=os.getenv("NEO4J_USERNAME"),
+        NEO4J_PASSWORD=os.getenv("NEO4J_PASSWORD"),
+        NEO4J_SERVER_URL=os.getenv("NEO4J_SERVER_URL"),
     )
-    if(test_config is not None):
+    if test_config is not None:
         app.config.update(test_config)
     with app.app_context():
-        current_app.driver = Neo4jConnection( # TODO might be good to change this bad practice in future
+        current_app.driver = Neo4jConnection(  # TODO might be good to change this bad practice in future
             app.config.get("NEO4J_USERNAME"),
             app.config.get("NEO4J_PASSWORD"),
-            app.config.get("NEO4J_SERVER_URL")
+            app.config.get("NEO4J_SERVER_URL"),
         )
         current_app.driver.connect()
         current_app.driver.verify_connectivity()
 
-
     @app.route("/")
     def index():
         return "Index"
-    
-    
+
     @app.route("/query/<username>")
     def query_user(username: str):
         user = User(username)
@@ -42,6 +41,5 @@ def create_app(test_config = None):
         else:
             res = user.create()
             return "created user " + res._properties["username"]
-
 
     return app
