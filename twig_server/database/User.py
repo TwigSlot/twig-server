@@ -1,7 +1,6 @@
 from twig_server.database.Native import Node, Relationship
 from twig_server.database.connection import Neo4jConnection
 
-
 class User(Node):
     label_name = "User"
 
