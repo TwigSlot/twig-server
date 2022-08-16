@@ -1,9 +1,12 @@
 # parent classes for 'native' neo4j objects: Nodes and Relationships
 # mostly holds helper classes
+from typing import Optional
+
+from twig_server.database.connection import Neo4jConnection
 
 
 class Node:
-    def __init__(self, conn, uid=None):
+    def __init__(self, conn: Neo4jConnection, uid: Optional[int] = None):
         print("set properties")
         self.properties = {}  # represents properties locally
         self.dbObj = None  # represents the data in the database
@@ -12,10 +15,9 @@ class Node:
         self.db_conn = conn.conn
 
         self.query_uid()  # try to retrieve existing database info for EXISTING UID
-        return
 
     # sync local properties with database data
-    def syncProperties(self):
+    def sync_properties(self):
         self.properties = {}
         if self.dbObj == None:
             return  # if no response, properties will be empty
@@ -29,8 +31,8 @@ class Node:
         queryStr = f"MATCH (n{(':'+label_name) if label_name else ''}) WHERE id(n)=$uid RETURN n"
         with self.db_conn.session() as session:
             res = session.run(queryStr, {"uid": self.properties["uid"]})
-            self.dbObj = self.extractNode(res)
-            self.syncProperties()
+            self.dbObj = self.extract_node(res)
+            self.sync_properties()
         return self.dbObj
 
     def delete(self):
@@ -39,9 +41,9 @@ class Node:
         queryStr = f"MATCH (n) WHERE id(n)=$uid DETACH DELETE n"
         with self.db_conn.session() as session:
             res = session.run(queryStr, {"uid": self.properties["uid"]})
-            self.dbObj = self.extractNode(res)
+            self.dbObj = self.extract_node(res)
 
-            self.syncProperties()
+            self.sync_properties()
 
     def create(self, label_name):
         if "uid" in self.properties:
@@ -51,11 +53,11 @@ class Node:
         )
         with self.db_conn.session() as session:
             res = session.run(queryStr)
-            self.dbObj = self.extractNode(res)
-            self.syncProperties()
+            self.dbObj = self.extract_node(res)
+            self.sync_properties()
         return self.dbObj
 
-    def extractNode(
+    def extract_node(
         self, res
     ):  # for queries that are meant to return a single node
         row = res.single()
@@ -76,8 +78,8 @@ class Node:
                 queryStr,
                 {"uid": self.properties["uid"], "name": name, "value": value},
             )
-            self.dbObj = self.extractNode(res)
-            self.syncProperties()
+            self.dbObj = self.extract_node(res)
+            self.sync_properties()
         return self.dbObj
 
     def get(self, name):
@@ -90,7 +92,7 @@ class Relationship:
     def __init__(self):
         return
 
-    def extractRelationship(self, res):
+    def extract_relationship(self, res):
         row = res.single()
         if row:
             row = row[0]

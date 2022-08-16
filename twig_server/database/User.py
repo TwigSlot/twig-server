@@ -20,8 +20,8 @@ class User(Node):
         )
         with self.db_conn.session() as session:
             res = session.run(queryStr, {"username": self.username})
-            self.dbObj = self.extractNode(res)
-            self.syncProperties()
+            self.dbObj = self.extract_node(res)
+            self.sync_properties()
         return self.dbObj
 
     def create(self):  # create a new User in the database
