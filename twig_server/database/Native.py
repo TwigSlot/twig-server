@@ -7,12 +7,13 @@ from twig_server.database.connection import Neo4jConnection
 
 class Node:
     def __init__(self, conn: Neo4jConnection, uid: Optional[int] = None):
-        print("set properties")
+        # print("set properties")
         self.properties = {}  # represents properties locally
         self.dbObj = None  # represents the data in the database
 
         self.properties["uid"] = uid
         self.db_conn = conn.conn
+        self.conn = conn
 
         self.query_uid()  # try to retrieve existing database info for EXISTING UID
 
@@ -29,10 +30,18 @@ class Node:
         if "uid" not in self.properties:  # querying for this UID
             return None
         queryStr = f"MATCH (n{(':'+label_name) if label_name else ''}) WHERE id(n)=$uid RETURN n"
+        # == TODO This code works
         with self.db_conn.session() as session:
             res = session.run(queryStr, {"uid": self.properties["uid"]})
             self.dbObj = self.extract_node(res)
             self.sync_properties()
+        # ==
+
+        # == TODO this code doesnt work
+        # res = self.conn.exec_query(queryStr, {"uid": self.properties["uid"]})
+        # self.dbObj = self.extract_node(res)
+        # self.sync_properties()
+        # ==
         return self.dbObj
 
     def delete(self):

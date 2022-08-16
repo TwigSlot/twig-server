@@ -14,7 +14,8 @@
             "env": {
                 "_PYTEST_RAISE": "1"
             },
-            "module": "pytest"
+            // "module": "pytest",
+            "args": ["tests/test_database_resource.py"]
         },
         {
             "name": "Python: Flask",

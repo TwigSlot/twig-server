@@ -12,7 +12,7 @@ class Resource(Node):
     ):  # retrieve an existing resource or create a new one
         super().__init__(conn, uid)
 
-    def query_uid(self):
+    def query_uid(self, label_name = None):
         return super().query_uid(Resource._label_name)
 
     def create(self):
