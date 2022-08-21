@@ -2,21 +2,12 @@ from twig_server.database.User import User
 import pytest
 
 
-@pytest.fixture()
-def create_user_username(connection):
-    jh = User(connection, username="jh")  # creating a user needs a username
-    assert jh != None
-    assert jh.dbObj == None
-    dbObj = jh.create()
-    assert dbObj != None
-    assert jh.dbObj != None
-    assert dbObj == jh.dbObj
-    yield jh
-    jh.delete()
-
-
 def test_database_create_user_username(create_user_username):
     assert create_user_username != None
+
+
+def test_database_user_query_uid(create_user_username):
+    assert create_user_username.query_uid() != None
 
 
 def test_database_user_query_username(create_user_username):

@@ -1,74 +1,69 @@
 # parent classes for 'native' neo4j objects: Nodes and Relationships
 # mostly holds helper classes
-from typing import Optional
 
+
+from typing import Any, Mapping, Optional
 from twig_server.database.connection import Neo4jConnection
+from neo4j import Neo4jDriver, Result, Record
 
 
 class Node:
-    def __init__(self, conn: Neo4jConnection, uid: Optional[int] = None):
-        # print("set properties")
-        self.properties = {}  # represents properties locally
-        self.dbObj = None  # represents the data in the database
+    def __init__(self, conn: Neo4jConnection, uid: Optional[int] =None) -> None:
+        """Initialize a new Node in Neo4J"""
+        print("set properties")
+        self.properties: Mapping[str, Any] = {}  # represents properties locally
+        self.dbObj: Optional[ Record ] = None  
+        # represents the data in the database
 
         self.properties["uid"] = uid
-        self.db_conn = conn.conn
-        self.conn = conn
+        self.db_conn: Neo4jDriver = conn.conn
 
         self.query_uid()  # try to retrieve existing database info for EXISTING UID
 
     # sync local properties with database data
-    def sync_properties(self):
+    def syncProperties(self) -> None:
         self.properties = {}
         if self.dbObj == None:
             return  # if no response, properties will be empty
+        assert self.dbObj is not None # for type checking
         self.properties["uid"] = int(self.dbObj.id)
         for key in self.dbObj._properties:
             self.properties[key] = self.dbObj[key]
 
-    def query_uid(self, label_name=None):
+    def query_uid(self, label_name: Optional[str] =None) -> Optional[Record]:
         if "uid" not in self.properties:  # querying for this UID
             return None
         queryStr = f"MATCH (n{(':'+label_name) if label_name else ''}) WHERE id(n)=$uid RETURN n"
-        # == TODO This code works
         with self.db_conn.session() as session:
             res = session.run(queryStr, {"uid": self.properties["uid"]})
-            self.dbObj = self.extract_node(res)
-            self.sync_properties()
-        # ==
-
-        # == TODO this code doesnt work
-        # res = self.conn.exec_query(queryStr, {"uid": self.properties["uid"]})
-        # self.dbObj = self.extract_node(res)
-        # self.sync_properties()
-        # ==
+            self.dbObj = self.extractNode(res)
+            self.syncProperties()
         return self.dbObj
 
-    def delete(self):
+    def delete(self) -> None: 
         if "uid" not in self.properties:
             raise Exception("No UID to delete")
         queryStr = f"MATCH (n) WHERE id(n)=$uid DETACH DELETE n"
         with self.db_conn.session() as session:
             res = session.run(queryStr, {"uid": self.properties["uid"]})
-            self.dbObj = self.extract_node(res)
+            self.dbObj = self.extractNode(res)
 
-            self.sync_properties()
+            self.syncProperties()
 
-    def create(self, label_name):
+    def create(self, label_name: str) -> Record:
         if "uid" in self.properties:
             return self.dbObj
         queryStr = (
             f"CREATE (n{(':'+label_name) if label_name else ''}) RETURN n"
         )
         with self.db_conn.session() as session:
-            res = session.run(queryStr)
-            self.dbObj = self.extract_node(res)
-            self.sync_properties()
+            res: Result = session.run(queryStr)
+            self.dbObj = self.extractNode(res)
+            self.syncProperties()
         return self.dbObj
 
-    def extract_node(
-        self, res
-    ):  # for queries that are meant to return a single node
+    def extractNode(self, res: Result) -> Optional[Record]:
+        """Pass in the row (Record) from a cypher query (Result)"""
         row = res.single()
         if row:
             row = row[0]
@@ -76,7 +71,7 @@ class Node:
             return None
         return row
 
-    def set(self, name, value):
+    def set(self, name: str, value: str) -> Optional[Record]:
         if "uid" not in self.properties:
             return None
         queryStr = (
@@ -87,21 +82,28 @@ class Node:
                 queryStr,
                 {"uid": self.properties["uid"], "name": name, "value": value},
             )
-            self.dbObj = self.extract_node(res)
-            self.sync_properties()
+            self.dbObj = self.extractNode(res)
+            self.syncProperties()
         return self.dbObj
 
-    def get(self, name):
+    def get(self, name: str) -> Optional[str]:
         if name not in self.properties:
             return None
-        return self.properties[name]
+        return str(self.properties[name])
 
 
 class Relationship:
-    def __init__(self):
-        return
+    def __init__(
+        self, conn: Neo4jConnection, **kwargs: Any
+    ):  # uid = None, a_id = None, b_id = None):
+        self.properties = {}
+        self.properties["uid"] = 0
+        # self.a_id = a_id
+        # self.b_id = b_id
+        # self.db_conn = conn.conn
+        # self.query_uid()
 
-    def extract_relationship(self, res):
+    def extractRelationship(self, res: Result) -> Optional[Record]:
         row = res.single()
         if row:
             row = row[0]
