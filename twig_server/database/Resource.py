@@ -1,5 +1,5 @@
 from twig_server.database.connection import Neo4jConnection
-from twig_server.database.Native import Node, Relationship
+from twig_server.database.native import Node, Relationship
 
 
 class Resource(Node):

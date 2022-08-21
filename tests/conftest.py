@@ -42,10 +42,10 @@ def connection(app):
 def create_user_username(connection):
     jh = User(connection, username="jh")  # creating a user needs a username
     assert jh != None
-    assert jh.dbObj == None
-    dbObj = jh.create()
-    assert dbObj != None
-    assert jh.dbObj != None
-    assert dbObj == jh.dbObj
+    assert jh.db_obj == None
+    db_obj = jh.create()
+    assert db_obj != None
+    assert jh.db_obj != None
+    assert db_obj == jh.db_obj
     yield jh
     jh.delete()

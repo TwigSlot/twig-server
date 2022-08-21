@@ -10,13 +10,13 @@ def create_resource(connection):
         connection
     )  # passing in empty UID means we are interested in creating
     assert resource != None
-    assert resource.dbObj == None
+    assert resource.db_obj == None
     assert "uid" not in resource.properties
     # sync with db
-    dbObj = resource.create()
-    assert dbObj != None
-    assert resource.dbObj != None
-    assert resource.dbObj == dbObj
+    db_obj = resource.create()
+    assert db_obj != None
+    assert resource.db_obj != None
+    assert resource.db_obj == db_obj
     assert "uid" in resource.properties
     yield resource
     # clean up in db
@@ -24,7 +24,7 @@ def create_resource(connection):
     assert uid != None
     resource.delete()
     assert "uid" not in resource.properties
-    assert resource.dbObj == None
+    assert resource.db_obj == None
 
     assert Resource(connection, uid).query_uid() == None
 
@@ -43,5 +43,5 @@ def test_resource_query_uid(connection, create_resource):
 
 
 def test_resource_query_uid_not_found(connection):
-    assert Resource(connection, 123901924091023902).dbObj == None
+    assert Resource(connection, 123901924091023902).db_obj == None
     assert Resource(connection, 123901924091023902).properties == {}

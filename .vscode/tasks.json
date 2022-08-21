@@ -6,7 +6,7 @@
         {
             "label": "mypy",
             "type": "shell",
-            "command": "mypy ${file} --ignore-missing-imports --strict",
+            "command": "mypy ${file} --ignore-missing-imports --allow-subclassing-any --strict",
             "problemMatcher": []
         },
         {
@@ -26,7 +26,7 @@
         {
             "label": "black and mypy ALL",
             "type": "shell",
-            "command": "mypy $(git ls-files *.py) --ignore-missing-imports --strict && black $(git ls-files *.py)",
+            "command": "mypy $(git ls-files *.py) --ignore-missing-imports --allow-subclassing-any --strict && black $(git ls-files *.py)",
             "problemMatcher": []
         }
     ]
