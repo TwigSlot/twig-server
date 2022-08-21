@@ -21,7 +21,7 @@ class Node:
         self.query_uid()  # try to retrieve existing database info for EXISTING UID
 
     # sync local properties with database data
-    def syncProperties(self) -> None:
+    def sync_properties(self) -> None:
         self.properties = {}
         if self.dbObj == None:
             return  # if no response, properties will be empty
@@ -36,8 +36,8 @@ class Node:
         queryStr = f"MATCH (n{(':'+label_name) if label_name else ''}) WHERE id(n)=$uid RETURN n"
         with self.db_conn.session() as session:
             res = session.run(queryStr, {"uid": self.properties["uid"]})
-            self.dbObj = self.extractNode(res)
-            self.syncProperties()
+            self.dbObj = self.extract_node(res)
+            self.sync_properties()
         return self.dbObj
 
     def delete(self) -> None: 
@@ -46,9 +46,9 @@ class Node:
         queryStr = f"MATCH (n) WHERE id(n)=$uid DETACH DELETE n"
         with self.db_conn.session() as session:
             res = session.run(queryStr, {"uid": self.properties["uid"]})
-            self.dbObj = self.extractNode(res)
+            self.dbObj = self.extract_node(res)
 
-            self.syncProperties()
+            self.sync_properties()
 
     def create(self, label_name: str) -> Record:
         if "uid" in self.properties:
@@ -58,11 +58,11 @@ class Node:
         )
         with self.db_conn.session() as session:
             res: Result = session.run(queryStr)
-            self.dbObj = self.extractNode(res)
-            self.syncProperties()
+            self.dbObj = self.extract_node(res)
+            self.sync_properties()
         return self.dbObj
 
-    def extractNode(self, res: Result) -> Optional[Record]:
+    def extract_node(self, res: Result) -> Optional[Record]:
         """Pass in the row (Record) from a cypher query (Result)"""
         row = res.single()
         if row:
@@ -82,8 +82,8 @@ class Node:
                 queryStr,
                 {"uid": self.properties["uid"], "name": name, "value": value},
             )
-            self.dbObj = self.extractNode(res)
-            self.syncProperties()
+            self.dbObj = self.extract_node(res)
+            self.sync_properties()
         return self.dbObj
 
     def get(self, name: str) -> Optional[str]:
@@ -103,7 +103,7 @@ class Relationship:
         # self.db_conn = conn.conn
         # self.query_uid()
 
-    def extractRelationship(self, res: Result) -> Optional[Record]:
+    def extract_relationship(self, res: Result) -> Optional[Record]:
         row = res.single()
         if row:
             row = row[0]

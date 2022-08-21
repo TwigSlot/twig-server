@@ -3,7 +3,7 @@ from twig_server.database.Native import Node, Relationship
 
 
 class Resource(Node):
-    label_name = "Resource"
+    _label_name = "Resource"
 
     def __init__(
         self,
@@ -13,7 +13,7 @@ class Resource(Node):
         super().__init__(conn, uid)
 
     def query_uid(self):
-        return super().query_uid(Resource.label_name)
+        return super().query_uid(Resource._label_name)
 
     def create(self):
-        return super().create(Resource.label_name)
+        return super().create(Resource._label_name)
