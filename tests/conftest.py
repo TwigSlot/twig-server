@@ -33,9 +33,9 @@ def app():
 @pytest.fixture(scope="session")
 def connection(app):
     with app.app_context():
-        assert current_app.config['driver'] != None
-        yield current_app.config['driver']
-        current_app.config['driver'].close()
+        assert current_app.config["driver"] != None
+        yield current_app.config["driver"]
+        current_app.config["driver"].close()
 
 
 @pytest.fixture(scope="session")
