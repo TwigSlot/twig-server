@@ -22,7 +22,7 @@ class Project(Node):
             * name: `str` -- Name of Project
             * owner: `User` -- Owner of Project
         """
-        uid = kwargs.get("uid", None)
+        uid: Optional[int] = kwargs.get("uid", None)
         name = kwargs.get("name", "Untitled Project")
         owner = kwargs.get("owner", None)
         super().__init__(conn, uid)
