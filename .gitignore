@@ -239,3 +239,7 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+# my own addition
+.python-version
+.DS_Store
+**/.DS_Store

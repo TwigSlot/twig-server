@@ -1,0 +1,33 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "mypy",
+            "type": "shell",
+            "command": "mypy ${file} --ignore-missing-imports --allow-subclassing-any --strict",
+            "problemMatcher": []
+        },
+        {
+            "label": "black",
+            "type": "shell",
+            "command": "black ${file}",
+            "problemMatcher": []
+        },
+        {
+            "label": "black and mypy",
+            "dependsOn": [
+                "mypy",
+                "black"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "black and mypy ALL",
+            "type": "shell",
+            "command": "mypy $(git ls-files *.py) --ignore-missing-imports --allow-subclassing-any --strict && black $(git ls-files *.py)",
+            "problemMatcher": []
+        }
+    ]
+}

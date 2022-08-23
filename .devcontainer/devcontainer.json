@@ -1,0 +1,7 @@
+{
+  "name": "twig-server",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "forwardPorts": [5000]
+}
