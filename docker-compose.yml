@@ -1,9 +1,34 @@
+networks:
+  internal:
 services:
   server:
     build:
       dockerfile: Dockerfile
       context: .
     image: twig_server:latest
-    ports: 
-      - "6969:5000"
-    
+    networks:
+      - internal
+  caddy:
+    image: caddy:2.5.2-alpine
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy/data:/data
+      - ./caddy/config:/config
+    networks:
+      - internal
+  neo4j:
+    image: neo4j:latest
+    ports:
+      - "7474:7474"
+      - "7473:7473"
+      - "7687:7687"
+    networks:
+      - internal
+  ory:
+    image: oryd/kratos:v0.10.1
+    networks:
+      - internal
