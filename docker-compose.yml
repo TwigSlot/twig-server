@@ -1,0 +1,9 @@
+services:
+  server:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    image: twig_server:latest
+    ports: 
+      - "6969:5000"
+    

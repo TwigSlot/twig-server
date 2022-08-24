@@ -1,4 +1,3 @@
-from multiprocessing import resource_sharer
 from typing import Any, List, Optional
 from twig_server.database.Project import Project
 from twig_server.database.connection import Neo4jConnection
