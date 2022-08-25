@@ -1,0 +1,15 @@
+services:
+  server:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    image: twig_server:latest
+    environment:
+      - FLASK_DEBUG=1
+      - FLASK_APP=server.py
+    entrypoint: 
+      - flask
+      - run
+      - --host=0.0.0.0
+    ports: ['5000:5000']
+    volumes: ['.:/app']
