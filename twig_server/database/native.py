@@ -26,14 +26,20 @@ class Node:
         self.query_uid()  # try to retrieve existing database info for EXISTING UID
 
     # sync local properties with database data
+    @classmethod
+    def extract_properties(cls, db_obj: Any):
+        assert db_obj is not None
+        properties = {}
+        properties["uid"] = int(db_obj.id)
+        for key in db_obj._properties:
+            properties[key] = db_obj[key]
+        return properties
     def sync_properties(self) -> None:
         self.properties = {}
         if self.db_obj == None:
             return  # if no response, properties will be empty
         assert self.db_obj is not None  # for type checking
-        self.properties["uid"] = int(self.db_obj.id)
-        for key in self.db_obj._properties:
-            self.properties[key] = self.db_obj[key]
+        self.properties = Node.extract_properties(self.db_obj)
 
     def query_uid(self, label_name: Optional[str] = None) -> Optional[Record]:
         if "uid" not in self.properties:  # querying for this UID
@@ -144,15 +150,21 @@ class Relationship:
             return None
         return row
 
+    @classmethod # TODO abstract this away (redefinition in Node)
+    def extract_properties(cls, db_obj: Any):
+        assert db_obj is not None
+        properties = {}
+        properties["uid"] = int(db_obj.id)
+        for key in db_obj._properties:
+            properties[key] = db_obj[key]
+        return properties
     # sync local properties with database data
     def sync_properties(self) -> None:
         self.properties = {}
         if self.db_obj == None:
             return  # if no response, properties will be empty
         assert self.db_obj is not None  # for type checking
-        self.properties["uid"] = int(self.db_obj.id)
-        for key in self.db_obj._properties:
-            self.properties[key] = self.db_obj[key]
+        self.properties = Relationship.extract_properties(self.db_obj)
 
     def query_uid(self, label_name: Optional[str] = None) -> Optional[Result]:
         queryStr: str = f"MATCH (a)-[n{(':'+label_name) if label_name else ''}]->(b) WHERE id(n)=$uid RETURN n"

@@ -28,6 +28,7 @@ class Resource(Node):
         project = kwargs.get("project", None)
         super().__init__(conn, uid)
         self.title: str = title
+        self.description: str = "default description"
         self.project: Optional[Project] = project
         self.project_rls: Optional[Relationship] = None
 
@@ -47,6 +48,7 @@ class Resource(Node):
     def create(self, project: Project) -> Record:
         self.db_obj = super().create(Resource._label_name)
         self.set("title", self.title)
+        self.set("description", self.description)
         self.sync_properties()
         self.set_project(project)
         return self.db_obj

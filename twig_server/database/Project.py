@@ -27,6 +27,7 @@ class Project(Node):
         owner = kwargs.get("owner", None)
         super().__init__(conn, uid)
         self.name: str = name
+        self.description: str = "This is the default project description"
         self.owner: Optional[User] = owner
         self.owner_rls: Optional[Relationship] = None
 
@@ -45,6 +46,7 @@ class Project(Node):
     def create(self, owner: User) -> Record:
         self.db_obj = super().create(Project._label_name)
         self.set("name", self.name)
+        self.set("description", self.description)
         self.sync_properties()
         self.set_owner(owner)
         return self.db_obj
