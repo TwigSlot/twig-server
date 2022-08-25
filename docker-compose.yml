@@ -1,25 +1,40 @@
 networks:
   internal:
 services:
+  reverse-proxy:
+    # The official v2 Traefik docker image
+    image: traefik:v2.8
+    # Enables the web UI and tells Traefik to listen to docker
+    command: --api.insecure=true --providers.docker
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - traefik.http.middlewares.oathkeeper.forwardauth.address=http://oathkeeper:4456/decisions
+      - traefik.http.middlewares.oathkeeper.forwardauth.authResponseHeaders=X-Id-Token,Authorization
+    networks:
+      - internal
+  oathkeeper:
+    build:
+      dockerfile: ./containers/oathkeeper/Dockerfile
+      context: .
+    ports:
+      - "4455:4455"
+      - "4456:4456"
   server:
     build:
-      dockerfile: Dockerfile
+      dockerfile: ./containers/flask/Dockerfile
       context: .
     image: twig_server:latest
     networks:
       - internal
-  caddy:
-    image: caddy:2.5.2-alpine
-    restart: unless-stopped
-    ports:
-      - "8080:80"
-      - "443:443"
-    volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
-      - ./caddy/data:/data
-      - ./caddy/config:/config
-    networks:
-      - internal
+    labels:
+      - traefik.http.routers.service.middlewares=oathkeeper
   neo4j:
     image: neo4j:latest
     ports:
@@ -28,7 +43,7 @@ services:
       - "7687:7687"
     networks:
       - internal
-  ory:
-    image: oryd/kratos:v0.10.1
-    networks:
-      - internal
+  # ory:
+  #   image: oryd/kratos:v0.10.1
+  #   networks:
+  #     - internal

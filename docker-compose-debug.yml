@@ -1,7 +1,7 @@
 services:
   server:
     build:
-      dockerfile: Dockerfile
+      dockerfile: ./containers/flask/Dockerfile
       context: .
     image: twig_server:latest
     environment:
