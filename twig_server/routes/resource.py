@@ -34,3 +34,25 @@ def new_item(project_id: str):
         return new_relationship(project, a_id, b_id)
     else:
         return "item must be set", 404
+    
+def edit_resource(project_id: str, resource_id: str):
+    project_uid = int(project_id)
+    assert project_uid is not None
+    project = Project(current_app.config["driver"], uid=project_uid)
+    project.query_uid()
+    assert project.db_obj is not None
+
+    resource_uid = int(resource_id)
+    assert resource_uid is not None
+    resource = Resource(current_app.config["driver"], uid=resource_uid)
+    res = resource.query_uid()
+    assert resource.db_obj is not None
+
+    # TODO check resource owner == project
+
+    if res is None:
+        return "resource not found", 404
+    for key in request.args:
+        value = request.args.get(key)
+        resource.set(key, value)
+    return resource.properties

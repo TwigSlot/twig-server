@@ -41,6 +41,8 @@ app.add_url_rule("/project/<project_id>/delete",
                  methods=["POST", "DELETE"], view_func=project.delete_project)
 app.add_url_rule("/project/<project_id>/new",
                  methods=["GET", "PUT"], view_func=resource.new_item)
+app.add_url_rule("/project/<project_id>/resource/<resource_id>/edit",
+                 methods=["GET", "PUT"], view_func=resource.edit_resource)
 app.add_url_rule("/user/<kratos_username_or_user_id>",
                  methods=["GET"], view_func=user.query_user)
 
