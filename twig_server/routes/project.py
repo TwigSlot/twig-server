@@ -1,4 +1,4 @@
-from flask import Flask, current_app, request
+from flask import jsonify, current_app, request
 from twig_server.database.Project import Project
 
 from twig_server.database.connection import Neo4jConnection
@@ -15,7 +15,7 @@ def new_project():
     assert user.db_obj is not None
     project = Project(current_app.config["driver"], owner=user)
     project.create(user)
-    return str(project.properties)
+    return project.properties
 
 def list_resources(project: Project):
     resources = Resource.list_resources(current_app.config['driver'].conn, project)
@@ -30,6 +30,25 @@ def list_resources(project: Project):
                 row.append(Relationship.extract_properties(col))
         ret.append(row)
     return ret   
+
+def edit_project(project_id: str):
+    project = Project(current_app.config["driver"], uid=int(project_id))
+    res = project.query_uid()
+    if res is None:
+        return "project not found", 404
+    for key in request.args:
+        value = request.args.get(key)
+        project.set(key, value)
+    return project.properties
+
+def delete_project(project_id: str):
+    project = Project(current_app.config["driver"], uid=int(project_id))
+    res = project.query_uid()
+    if(res):
+        project.delete()
+        return jsonify({'success': True}), 200
+    else:
+        return jsonify({'success': False}), 404
 def query_project(project_id: str):
     project = Project(current_app.config['driver'], uid = int(project_id))
     res = project.query_uid()

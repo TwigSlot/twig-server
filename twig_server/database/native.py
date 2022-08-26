@@ -136,7 +136,7 @@ class Relationship:
               CREATE (a)-[n{(':'+label_name) if label_name else ''}]->(b) RETURN n"
         with self.db_conn.session() as session:
             res: Result = session.run(
-                queryStr, {"a_id": self.a_id, "b_id": self.b_id}
+                queryStr, {"a_id": int(self.a_id), "b_id": int(self.b_id)}
             )
             self.db_obj = self.extract_relationship(res)
             self.sync_properties()

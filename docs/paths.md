@@ -20,15 +20,15 @@ if user_id == session.id (client side)
 
 ## Project
 
-`PUT /project/new`
+`POST /project/new`
 
 - creates a new project, redirect to `/project/:new_project_id`
 
-`DELETE /project/:project_id/delete`
+`POST,DELETE /project/:project_id/delete`
 
 - deletes a project, redirect to `/user/:user_id`
 
-`PATCH /project/:project_id/edit?param1=value1&param2=value2`
+`POST,PATCH /project/:project_id/edit?param1=value1&param2=value2`
 
 - edits project information
 

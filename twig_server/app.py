@@ -32,11 +32,15 @@ def index():
 
 
 app.add_url_rule("/project/new", 
-                 methods=["GET", "PUT"], view_func=project.new_project)
+                 methods=["PUT"], view_func=project.new_project)
 app.add_url_rule("/project/<project_id>",
                  methods=["GET"], view_func=project.query_project)
+app.add_url_rule("/project/<project_id>/edit",
+                 methods=["POST", "PATCH"], view_func=project.edit_project)
+app.add_url_rule("/project/<project_id>/delete", 
+                 methods=["POST", "DELETE"], view_func=project.delete_project)
 app.add_url_rule("/project/<project_id>/new",
-                 methods=["GET", "PUT"], view_func=resource.new_resource)
+                 methods=["GET", "PUT"], view_func=resource.new_item)
 app.add_url_rule("/user/<kratos_username_or_user_id>",
                  methods=["GET"], view_func=user.query_user)
 
