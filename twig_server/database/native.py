@@ -2,7 +2,7 @@
 # mostly holds helper classes
 
 
-from typing import Any, Mapping, Optional
+from typing import Any, List, Mapping, Optional
 from twig_server.database.connection import Neo4jConnection
 from neo4j import Neo4jDriver, Result, Record
 
@@ -174,3 +174,36 @@ class Relationship:
             self.sync_properties()
 
         return self.db_obj
+
+    def delete(self) -> None:
+        if "uid" not in self.properties:
+            raise Exception("No UID to delete")
+        queryStr = f"MATCH (a)-[n]->(b) WHERE id(n)=$uid DELETE n"
+        with self.db_conn.session() as session:
+            res = session.run(queryStr, {"uid": self.properties["uid"]})
+            self.db_obj = self.extract_relationship(res)
+
+            self.sync_properties()
+
+    @classmethod
+    # TODO fix some circular imports
+    def list_relationships(cls, db_conn: Neo4jDriver, project: Any) -> List[Record]:
+        # queryStr = f"MATCH (n:{Project._label_name})\
+        #             -[{Resource._label_project_relationship}]->\
+        #             (m:{Resource._label_name}) \
+        #             -[e]-> \
+        #             (a) \
+        #         WHERE id(n)=$uid \
+        #         RETURN m,e,a"
+        queryStr = f"MATCH (n:Project)\
+                    -[Has_Resource]->\
+                    (m:Resource) \
+                    -[e]-> \
+                    (a:Resource) \
+                WHERE id(n)=$uid \
+                RETURN m,e,a"
+        res_list = []
+        with db_conn.session() as session:
+            res = session.run(queryStr, {'uid': project.properties['uid']})
+            res_list = [x for x in res]
+        return res_list

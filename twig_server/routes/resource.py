@@ -1,4 +1,4 @@
-from flask import Flask, current_app, request
+from flask import jsonify, current_app, request
 from twig_server.database.Project import Project
 
 from twig_server.database.connection import Neo4jConnection
@@ -56,3 +56,43 @@ def edit_resource(project_id: str, resource_id: str):
         value = request.args.get(key)
         resource.set(key, value)
     return resource.properties
+
+def delete_resource(project_id: str, resource_id: str):
+    project_uid = int(project_id)
+    assert project_uid is not None
+    project = Project(current_app.config["driver"], uid=project_uid)
+    project.query_uid()
+    assert project.db_obj is not None
+
+    resource_uid = int(resource_id)
+    resource = Resource(current_app.config["driver"], uid=resource_uid)
+    res = resource.query_uid()
+
+    # TODO check resource owner == project
+
+    if(res):
+        resource.delete()
+        return jsonify({'success': True}), 200
+    else:
+        return jsonify({'success': False}), 404
+
+def delete_relationship(project_id: str, relationship_id: str):
+    project_uid = int(project_id)
+    assert project_uid is not None
+    project = Project(current_app.config["driver"], uid=project_uid)
+    project.query_uid()
+    assert project.db_obj is not None
+
+    relationship_uid= int(relationship_id)
+    rls = Relationship(current_app.config["driver"], uid=relationship_uid)
+    res = rls.query_uid()
+    if res is not None:
+        rls.delete()
+        return jsonify({'success': True}), 200
+    else:
+        return jsonify({'success': False}), 404
+
+def edit_relationship(project_id: str, relationship_id: str):
+    # not of great importance now
+    return 404
+

@@ -21,11 +21,20 @@ def list_resources(project: Project):
     resources = Resource.list_resources(current_app.config['driver'].conn, project)
     ret: list = []
     for x in resources:
+        col = x.get(x._Record__keys[2])
+        assert(type(col) is graph.Node)
+        ret.append(Node.extract_properties(col))
+    return ret   
+
+def list_relationships(project: Project):
+    resources = Relationship.list_relationships(current_app.config['driver'].conn, project)
+    ret: list = []
+    for x in resources:
         row = []
         for i in range(len(x)):
             col = x.get(x._Record__keys[i])
             if(type(col) is graph.Node):
-                row.append(Node.extract_properties(col))
+                row.append(Node.extract_properties(col)['uid'])
             else:
                 row.append(Relationship.extract_properties(col))
         ret.append(row)
@@ -53,6 +62,9 @@ def query_project(project_id: str):
     project = Project(current_app.config['driver'], uid = int(project_id))
     res = project.query_uid()
     if res:
-        return list_resources(project=project)
+        ans = list_resources(project=project) 
+        ans2 = list_relationships(project=project)
+        if(ans2): ans.extend(ans2)
+        return ans
     return 'no such project'
 

@@ -36,6 +36,8 @@ if user_id == session.id (client side)
 
 - returns list of nodes and edges belonging to project `project_id`
 
+## Resources
+
 `GET /project/:project_id/resource/:resource_id/edit?param1=value1&param2=value2`
 
 - edits the resource information from this project's context
@@ -44,6 +46,14 @@ if user_id == session.id (client side)
 `PUT /project/:project_id/new?item=`
 
 - item is either `node` or `relationship`, creates item in project
+
+`DELETE /project/:project_id/resource/:resource_id/delete`
+
+- delete resource
+
+`DELETE /project/:project_id/relationship/:relationship_id/delete`
+
+- delete relationship
 
 ## Misc
 
