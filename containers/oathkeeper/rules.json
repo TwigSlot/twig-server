@@ -2,18 +2,18 @@
   {
     "id": "allow-anonymous-with-header-mutator",
     "version": "v0.39.2",
-    "upstream": { // where the req is being forwarded
+    "upstream": { 
       "url": "https://httpbin.org/anything/header"
     },
-    "match": { // match url the user typed in
-      "url": "http://<127.0.0.1|localhost>:4455/anything/header",
+    "match": { 
+      "url": "http://<127.0.0.1|localhost>:6955/anything/header",
       "methods": [
         "GET"
       ]
     },
-    "authenticators": [ // inside config.yaml
+    "authenticators": [ 
       {
-        "handler": "anonymous"  // this one turns it into guest
+        "handler": "anonymous"  
       }
     ],
     "authorizer": {
@@ -37,7 +37,7 @@
       "url": "https://httpbin.org/anything/deny"
     },
     "match": {
-      "url": "http://<127.0.0.1|localhost>:4455/anything/deny",
+      "url": "http://<127.0.0.1|localhost>:6955/anything/deny",
       "methods": [
         "GET"
       ]
@@ -93,7 +93,7 @@
       "url": "https://httpbin.org/anything/id_token"
     },
     "match": {
-      "url": "http://<127.0.0.1|localhost>:4455/anything/id_token",
+      "url": "http://<127.0.0.1|localhost>:6955/anything/id_token",
       "methods": [
         "GET"
       ]
