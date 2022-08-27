@@ -33,8 +33,11 @@ services:
     image: twig_server:latest
     networks:
       - internal
+    ports:
+      - "5000:5000"
     labels:
       - traefik.http.routers.service.middlewares=oathkeeper
+      - traefik.http.routers.whoami.rule=Host(`flask.docker.localhost`)
   neo4j:
     image: neo4j:latest
     ports:

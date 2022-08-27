@@ -1,5 +1,37 @@
 [
   {
+    "id": "api-public",
+    "version": "v0.39.2",
+    "match": {
+      "url": "<http|https>://<127.0.0.1|localhost|twig.tchlabs.net><.*>/<.*>",
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "anonymous"
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    },
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}"
+          }
+        }
+      }
+    ]
+  },
+  {
     "id": "allow-anonymous-with-header-mutator",
     "version": "v0.39.2",
     "upstream": { 
