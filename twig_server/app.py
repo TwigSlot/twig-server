@@ -1,4 +1,5 @@
 from flask import Flask, current_app
+from flask_cors import CORS
 from twig_server.routes import misc, project, resource, user
 
 import os
@@ -8,6 +9,7 @@ from twig_server.database.connection import Neo4jConnection
 
 load_dotenv()
 app = Flask(__name__)
+CORS(app)
 app.config.from_mapping(
     NEO4J_USERNAME=os.getenv("NEO4J_USERNAME"),
     NEO4J_PASSWORD=os.getenv("NEO4J_PASSWORD"),

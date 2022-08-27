@@ -12,6 +12,7 @@ Flask = "^2.2.2"
 neo4j = "^4.4.5"
 python-dotenv = "^0.20.0"
 pysqlite3 = "^0.4.7"
+Flask-Cors = "^3.0.10"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"

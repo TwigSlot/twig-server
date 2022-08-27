@@ -11,12 +11,12 @@ from twig_server.database.native import Relationship
 def new_node(project) -> str:
     resource = Resource(current_app.config['driver'])
     resource.create(project)
-    return resource.properties
+    return jsonify(resource.properties)
 
 def new_relationship(project, a_id: str, b_id: str):
     resource = Relationship(current_app.config['driver'], a_id=a_id, b_id=b_id)
     resource.create('prereq')
-    return resource.properties
+    return jsonify(resource.properties)
 
 def new_item(project_id: str):
     project_uid = int(project_id)
@@ -25,13 +25,13 @@ def new_item(project_id: str):
     project.query_uid()
     assert project.db_obj is not None
     if(request.args.get('item') == 'node'):
-        return new_node(project)
+        return new_node(project), 200
     elif(request.args.get('item') == 'relationship'):
         a_id = request.args.get('a_id')
         b_id = request.args.get('b_id')
         assert a_id is not None
         assert b_id is not None
-        return new_relationship(project, a_id, b_id)
+        return new_relationship(project, a_id, b_id), 200
     else:
         return "item must be set", 404
     
@@ -55,7 +55,7 @@ def edit_resource(project_id: str, resource_id: str):
     for key in request.args:
         value = request.args.get(key)
         resource.set(key, value)
-    return resource.properties
+    return jsonify(resource.properties), 200
 
 def delete_resource(project_id: str, resource_id: str):
     project_uid = int(project_id)
@@ -94,5 +94,5 @@ def delete_relationship(project_id: str, relationship_id: str):
 
 def edit_relationship(project_id: str, relationship_id: str):
     # not of great importance now
-    return 404
+    return 'not implemented yet', 404
 

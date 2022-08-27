@@ -19,15 +19,15 @@ class Resource(Node):
             Neo4J connection
         :Keyword Arguments:
             * uid: `str` -- Neo4J Unique ID
-            * title: `str` -- Title of Resource
+            * name: `str` -- Name of Resource
             * project: `Project` -- Primary project this resource belongs to
               TODO next time implement multiproject resource sharing
         """
         uid = kwargs.get("uid", None)
-        title = kwargs.get("title", "Untitled Resource")
+        name = kwargs.get("name", "Untitled Resource")
         project = kwargs.get("project", None)
         super().__init__(conn, uid)
-        self.title: str = title
+        self.name: str = name
         self.description: str = "default description"
         self.project: Optional[Project] = project
         self.project_rls: Optional[Relationship] = None
@@ -47,7 +47,7 @@ class Resource(Node):
 
     def create(self, project: Project) -> Record:
         self.db_obj = super().create(Resource._label_name)
-        self.set("title", self.title)
+        self.set("name", self.name)
         self.set("description", self.description)
         self.sync_properties()
         self.set_project(project)

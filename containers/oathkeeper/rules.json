@@ -2,18 +2,18 @@
   {
     "id": "allow-anonymous-with-header-mutator",
     "version": "v0.39.2",
-    "upstream": {
+    "upstream": { // where the req is being forwarded
       "url": "https://httpbin.org/anything/header"
     },
-    "match": {
+    "match": { // match url the user typed in
       "url": "http://<127.0.0.1|localhost>:4455/anything/header",
       "methods": [
         "GET"
       ]
     },
-    "authenticators": [
+    "authenticators": [ // inside config.yaml
       {
-        "handler": "anonymous"
+        "handler": "anonymous"  // this one turns it into guest
       }
     ],
     "authorizer": {
