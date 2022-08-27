@@ -8,7 +8,7 @@ services:
     command: --api.insecure=true --providers.docker
     ports:
       # The HTTP port
-      - "80:80"
+      - "6980:80"
       # The Web UI (enabled by --api.insecure=true)
       - "8080:8080"
     volumes:
@@ -24,8 +24,8 @@ services:
       dockerfile: ./containers/oathkeeper/Dockerfile
       context: .
     ports:
-      - "4455:4455"
-      - "4456:4456"
+      - "6955:4455"
+      - "6956:4456"
   server:
     build:
       dockerfile: ./containers/flask/Dockerfile
