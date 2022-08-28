@@ -5,7 +5,7 @@ services:
     # The official v2 Traefik docker image
     image: traefik:v2.8
     # Enables the web UI and tells Traefik to listen to docker
-    command: --api.insecure=true --providers.docker
+    command: --api.insecure=true --providers.docker --log.level=DEBUG
     ports:
       # The HTTP port
       - "6980:80"
@@ -13,7 +13,7 @@ services:
       - "8080:8080"
     volumes:
       # So that Traefik can listen to the Docker events
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
       - traefik.http.middlewares.oathkeeper.forwardauth.address=http://oathkeeper:4456/decisions
       - traefik.http.middlewares.oathkeeper.forwardauth.authResponseHeaders=X-Id-Token,Authorization
@@ -26,6 +26,16 @@ services:
     ports:
       - "6955:4455"
       - "6956:4456"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.testingoath-router-1.rule=Host(`oathkeeper1.docker.localhost`)
+      - traefik.http.routers.testingoath-router-1.service=testingoath-service-1
+      - traefik.http.services.testingoath-service-1.loadbalancer.server.port=4455
+      - traefik.http.routers.testingoath-router-2.rule=Host(`oathkeeper2.docker.localhost`)
+      - traefik.http.routers.testingoath-router-2.service=testingoath-service-2
+      - traefik.http.services.testingoath-service-2.loadbalancer.server.port=4456
+    networks:
+      - internal # source-of-bug previously
   server:
     build:
       dockerfile: ./containers/flask/Dockerfile
@@ -36,8 +46,13 @@ services:
     ports:
       - "5000:5000"
     labels:
-      - traefik.http.routers.service.middlewares=oathkeeper
-      - traefik.http.routers.whoami.rule=Host(`flask.docker.localhost`)
+      - traefik.enable=true
+      - traefik.http.routers.myrouter.middlewares=oathkeeper
+      - traefik.http.routers.myrouter.rule=Host(`twig.tchlabs.net`)
+      # - traefik.http.routers.twig2.middlewares=oathkeeper
+      - traefik.http.routers.twig2.rule=Host(`twig2.tchlabs.net`)
+      - traefik.http.routers.altrouter.middlewares=oathkeeper
+      - traefik.http.routers.altrouter.rule=Host(`flask.docker.localhost`)
   neo4j:
     image: neo4j:latest
     ports:

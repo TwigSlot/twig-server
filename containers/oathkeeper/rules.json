@@ -3,7 +3,7 @@
     "id": "api-public",
     "version": "v0.39.2",
     "match": {
-      "url": "<http|https>://<twig.tchlabs.net|flask.docker.localhost><.*>/<.*>",
+      "url": "<http|https>://<twig.tchlabs.net|flask.docker.localhost><.*>/user/<.*>",
       "methods": [
         "GET",
         "POST",
@@ -32,13 +32,72 @@
     ]
   },
   {
+    "id": "api-edit-restricted",
+    "version": "v0.39.2",
+    "match": {
+      "url": "<http|https>://<twig.tchlabs.net|flask.docker.localhost><.*>/project/<.*>",
+      "methods": [
+        "GET"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "anonymous"
+      }
+    ],
+    "authorizer": {
+      "handler": "allow"
+    },
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "api-edit-restricted",
+    "version": "v0.39.2",
+    "match": {
+      "url": "<http|https>://<twig.tchlabs.net|flask.docker.localhost><.*>/project/<.*>",
+      "methods": [
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH"
+      ]
+    },
+    "authenticators": [
+      {
+        "handler": "anonymous"
+      }
+    ],
+    "authorizer": {
+      "handler": "deny"
+    },
+    "mutators": [
+      {
+        "handler": "header",
+        "config": {
+          "headers": {
+            "X-User": "{{ print .Subject }}"
+          }
+        }
+      }
+    ]
+  },
+  {
     "id": "allow-anonymous-with-header-mutator",
     "version": "v0.39.2",
     "upstream": { 
       "url": "https://httpbin.org/anything/header"
     },
     "match": { 
-      "url": "http://<127.0.0.1|localhost>:6955/anything/header",
+      "url": "http://<127.0.0.1|localhost|oathkeeper1.docker.localhost>:<6955|6980>/anything/header",
       "methods": [
         "GET"
       ]
