@@ -10,6 +10,7 @@ Auth is handled by Ory Kratos.
 `PUT /user/:user_id`
 
 - creates a new user if it doesn't already exist
+- *requires Authentication (TODO)
 
 `GET /user/:user_id` 
 
@@ -23,14 +24,17 @@ if user_id == session.id (client side)
 `POST /project/new`
 
 - creates a new project, redirect to `/project/:new_project_id`
+- *requires Authentication
 
 `POST,DELETE /project/:project_id/delete`
 
 - deletes a project, redirect to `/user/:user_id`
+- *requires Authentication
 
 `POST,PATCH /project/:project_id/edit?param1=value1&param2=value2`
 
 - edits project information
+- *requires Authentication
 
 `GET /project/:project_id`
 
@@ -46,14 +50,17 @@ if user_id == session.id (client side)
 `PUT /project/:project_id/new?item=`
 
 - item is either `node` or `relationship`, creates item in project
+- *requires Authentication
 
 `DELETE /project/:project_id/resource/:resource_id/delete`
 
 - delete resource
+- *requires Authentication
 
 `DELETE /project/:project_id/relationship/:relationship_id/delete`
 
 - delete relationship
+- *requires Authentication
 
 ## Misc
 
