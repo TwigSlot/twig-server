@@ -8,7 +8,7 @@ services:
     command: --api.insecure=true --providers.docker --log.level=DEBUG
     ports:
       # The HTTP port
-      - "6980:80"
+      - "80:80"
       # The Web UI (enabled by --api.insecure=true)
       - "8080:8080"
     volumes:
@@ -48,11 +48,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.myrouter.middlewares=oathkeeper
-      - traefik.http.routers.myrouter.rule=Host(`twig.tchlabs.net`)
-      # - traefik.http.routers.twig2.middlewares=oathkeeper
-      - traefik.http.routers.twig2.rule=Host(`twig2.tchlabs.net`)
-      - traefik.http.routers.altrouter.middlewares=oathkeeper
-      - traefik.http.routers.altrouter.rule=Host(`flask.docker.localhost`)
+      - traefik.http.routers.myrouter.rule=Host(`api.twig.tchlabs.net`)
   neo4j:
     image: neo4j:latest
     ports:
@@ -98,12 +94,20 @@ services:
         read_only: false
     networks:
       - internal
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.kratos-router.rule=Host(`twig.tchlabs.net`)&&PathPrefix(`/kratos`)
+      - traefik.http.routers.kratos-router.middlewares=kratos-stripprefix
+      - traefik.http.middlewares.kratos-stripprefix.stripprefix.prefixes=/kratos
+      - traefik.http.routers.kratos-router.service=kratos
+      - traefik.http.services.kratos.loadbalancer.server.port=4433
   kratos-selfservice-ui-node:
     image: oryd/kratos-selfservice-ui-node:v0.9.0-alpha.2
     environment:
       - PORT=4455
       - KRATOS_PUBLIC_URL=http://kratos:4433/
-      - KRATOS_BROWSER_URL=http://127.0.0.1:4433/
+      - KRATOS_BROWSER_URL=http://twig.tchlabs.net/kratos
+      - BASE_PATH=http://twig.tchlabs.net/auth
     networks:
       - internal
     ports:
@@ -111,9 +115,11 @@ services:
     restart: on-failure
     labels:
       - traefik.enable=true
-      # - traefik.http.routers.selfservice-router.rule=Host(`auth.twig.tchlabs.net`)
-      # - traefik.http.routers.selfservice-router.service=selfservice
-      # - traefik.http.services.selfservice.loadbalancer.server.port=4455
+      - traefik.http.routers.selfservice-router.rule=Host(`twig.tchlabs.net`)&&PathPrefix(`/auth`)
+      - traefik.http.routers.selfservice-router.middlewares=auth-stripprefix
+      - traefik.http.middlewares.auth-stripprefix.stripprefix.prefixes=/auth
+      - traefik.http.routers.selfservice-router.service=selfservice
+      - traefik.http.services.selfservice.loadbalancer.server.port=4455
   mailslurper:
     image: oryd/mailslurper:latest-smtps
     ports:

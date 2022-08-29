@@ -4,16 +4,16 @@ dsn: memory
 
 serve:
   public:
-    base_url: http://127.0.0.1:4433/
+    base_url: http://twig.tchlabs.net/kratos/
     cors:
       enabled: true
   admin:
     base_url: http://kratos:4434/
 
 selfservice:
-  default_browser_return_url: http://127.0.0.1:4455/
+  default_browser_return_url: http://twig.tchlabs.net/auth/
   allowed_return_urls:
-    - http://127.0.0.1:4455
+    - http://twig.tchlabs.net/auth
 
   methods:
     password:
@@ -21,33 +21,33 @@ selfservice:
 
   flows:
     error:
-      ui_url: http://127.0.0.1:4455/error
+      ui_url: http://twig.tchlabs.net/auth/error
 
     settings:
-      ui_url: http://127.0.0.1:4455/settings
+      ui_url: http://twig.tchlabs.net/auth/settings
       privileged_session_max_age: 15m
 
     recovery:
       enabled: true
-      ui_url: http://127.0.0.1:4455/recovery
+      ui_url: http://twig.tchlabs.net/auth/recovery
 
     verification:
       enabled: true
-      ui_url: http://127.0.0.1:4455/verification
+      ui_url: http://twig.tchlabs.net/auth/verification
       after:
-        default_browser_return_url: http://127.0.0.1:4455/
+        default_browser_return_url: http://twig.tchlabs.net/auth/
 
     logout:
       after:
-        default_browser_return_url: http://127.0.0.1:4455/login
+        default_browser_return_url: http://twig.tchlabs.net/auth/login
 
     login:
-      ui_url: http://127.0.0.1:4455/login
+      ui_url: http://twig.tchlabs.net/auth/login
       lifespan: 10m
 
     registration:
       lifespan: 10m
-      ui_url: http://127.0.0.1:4455/registration
+      ui_url: http://twig.tchlabs.net/auth/registration
       after:
         password:
           hooks:
@@ -61,7 +61,7 @@ log:
 
 secrets:
   cookie:
-    - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
+    - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE # TODO
   cipher:
     - 32-LONG-SECRET-NOT-SECURE-AT-ALL
 

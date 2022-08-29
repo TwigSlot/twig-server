@@ -3,7 +3,7 @@
     "id": "api-public",
     "version": "v0.39.2",
     "match": {
-      "url": "<http|https>://<twig.tchlabs.net|flask.docker.localhost><.*>/user/<.*>",
+      "url": "<http|https>://<api.twig.tchlabs.net|flask.docker.localhost><.*>/user/<.*>",
       "methods": [
         "GET",
         "POST",
@@ -35,14 +35,14 @@
     "id": "api-edit-restricted",
     "version": "v0.39.2",
     "match": {
-      "url": "<http|https>://<twig.tchlabs.net|flask.docker.localhost><.*>/project/<.*>",
+      "url": "<http|https>://<api.twig.tchlabs.net|flask.docker.localhost><.*>/project/<.*>",
       "methods": [
         "GET"
       ]
     },
     "authenticators": [
       {
-        "handler": "cookie_session"
+        "handler": "anonymous"
       }
     ],
     "authorizer": {
