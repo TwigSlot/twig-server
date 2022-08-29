@@ -27,9 +27,6 @@ mutators:
     config:
       headers:
         X-User: "{{ print .Subject }}"
-        # You could add some other headers, for example with data from the
-        # session.
-        # X-Some-Arbitrary-Data: "{{ print .Extra.some.arbitrary.data }}"
   noop:
     enabled: true
   id_token:

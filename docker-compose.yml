@@ -16,7 +16,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
       - traefik.http.middlewares.oathkeeper.forwardauth.address=http://oathkeeper:4456/decisions
-      - traefik.http.middlewares.oathkeeper.forwardauth.authResponseHeaders=X-Id-Token,Authorization,X-User
+      - traefik.http.middlewares.oathkeeper.forwardauth.authResponseHeaders=X-Id-Token,Authorization,X-User,Cookie
     networks:
       - internal
   oathkeeper:
@@ -39,8 +39,19 @@ services:
       - "5000:5000"
     labels:
       - traefik.enable=true
-      - traefik.http.routers.myrouter.middlewares=oathkeeper
-      - traefik.http.routers.myrouter.rule=Host(`api.twig.tchlabs.net`)
+      - traefik.http.routers.api-router.middlewares=my-chain
+      # - traefik.http.middlewares.my-chain.headers.accesscontrolalloworigin=*
+      - traefik.http.middlewares.my-chain.chain.middlewares=cors,oathkeeper
+      - traefik.http.middlewares.cors.headers.accesscontrolallowcredentials=true
+      - traefik.http.middlewares.cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT
+      - traefik.http.middlewares.cors.headers.accesscontrolalloworiginlist=*
+      - traefik.http.middlewares.cors.headers.accesscontrolallowheaders=Cookie
+      - traefik.http.middlewares.cors.headers.accesscontrolexposeheaders=Cookie
+      - traefik.http.middlewares.cors.headers.accesscontrolmaxage=100
+      # - traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api
+      - traefik.http.routers.api-router.rule=Host(`twig.tchlabs.net`)&&PathPrefix(`/api`)
+      - traefik.http.routers.api-router.service=api
+      - traefik.http.services.api.loadbalancer.server.port=5000
   neo4j:
     image: neo4j:latest
     ports:

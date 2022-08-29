@@ -1,3 +1,5 @@
+from operator import concat
+from re import I
 from flask import jsonify, current_app, request
 from twig_server.database.Project import Project
 
@@ -7,6 +9,7 @@ from twig_server.database.Resource import Resource
 from neo4j import graph
 
 from twig_server.database.native import Node
+import twig_server.app as app
 def list_projects(user: User):
     projects = Project.list_projects(current_app.config['driver'].conn, user)
     ret: list = []
@@ -19,6 +22,17 @@ def list_projects(user: User):
 
 def concat_user_info_with_project_list(user: User):
     return jsonify({'user': user.properties, 'projects': list_projects(user)}), 200
+
+def new_user(kratos_user_id: str):
+    user = User(
+        current_app.config["driver"], kratos_user_id=kratos_user_id
+    )
+    res = user.query_kratos_user_id()
+    if res:
+        return "user was already created", 200
+    user.create()
+    return concat_user_info_with_project_list(user)
+ 
 def query_user(kratos_username_or_user_id: str):
     user = User(
         current_app.config["driver"], kratos_user_id=kratos_username_or_user_id

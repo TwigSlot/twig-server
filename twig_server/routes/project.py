@@ -6,9 +6,25 @@ from twig_server.database.Resource import Resource
 from twig_server.database.native import Node, Relationship
 from neo4j import graph
 
+import twig_server.app as app
+
+def explore():
+    projects = Project.explore_projects(current_app.config['driver'].conn)
+    ret: list = []
+    for x in projects:
+        col = x.get(x._Record__keys[0])
+        if(type(col) is graph.Node):
+            # is a node
+            ret.append(Node.extract_properties(col))
+    return jsonify({'projects':ret}), 200
 
 def new_project():
-    kratos_user_id = request.args.get("user")
+    kratos_user_id = request.headers.get('X-User')
+    debug = app.app.config['DEBUG']
+    if(kratos_user_id is None and debug): # for dev
+        kratos_user_id = request.args.get("user") 
+    if(kratos_user_id is None):
+        return "not authorized", 401
     assert kratos_user_id is not None
     user = User(current_app.config["driver"], kratos_user_id=kratos_user_id)
     user.query_kratos_user_id()
@@ -48,10 +64,22 @@ def list_relationships(project: Project):
 
 
 def edit_project(project_id: str):
+    kratos_user_id = request.headers.get('X-User')
+    debug = app.app.config['DEBUG']
+    if(kratos_user_id is None and debug): # for dev
+        kratos_user_id = request.args.get("user") 
+
     project = Project(current_app.config["driver"], uid=int(project_id))
     res = project.query_uid()
     if res is None:
         return "project not found", 404
+
+    owner = project.get_owner()
+    app.app.logger.info(kratos_user_id)
+    app.app.logger.info(owner['kratos_user_id'])
+    if(kratos_user_id != owner['kratos_user_id']):
+        return "not authorized", 401
+
     for key in request.args:
         value = request.args.get(key)
         project.set(key, value)

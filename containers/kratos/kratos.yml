@@ -19,7 +19,7 @@ serve:
     base_url: http://kratos:4434/
 
 selfservice:
-  default_browser_return_url: http://twig.tchlabs.net/auth/
+  default_browser_return_url: http://twig.tchlabs.net:5173
   allowed_return_urls:
     - http://twig.tchlabs.net/auth
 
@@ -34,6 +34,8 @@ selfservice:
     settings:
       ui_url: http://twig.tchlabs.net/auth/settings
       privileged_session_max_age: 15m
+      after:
+        default_browser_return_url: http://twig.tchlabs.net:5173
 
     recovery:
       enabled: true
@@ -42,12 +44,6 @@ selfservice:
     verification:
       enabled: true
       ui_url: http://twig.tchlabs.net/auth/verification
-      after:
-        default_browser_return_url: http://twig.tchlabs.net/auth/
-
-    logout:
-      after:
-        default_browser_return_url: http://twig.tchlabs.net/auth/login
 
     login:
       ui_url: http://twig.tchlabs.net/auth/login

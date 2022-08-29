@@ -35,7 +35,7 @@ def index():
 
 app.add_url_rule("/project/new", 
                  methods=["PUT"], view_func=project.new_project)
-app.add_url_rule("/project/<project_id>",
+app.add_url_rule("/api/project/<project_id>",
                  methods=["GET"], view_func=project.query_project)
 app.add_url_rule("/project/<project_id>/edit",
                  methods=["POST", "PATCH"], view_func=project.edit_project)
@@ -53,7 +53,10 @@ app.add_url_rule("/project/<project_id>/relationship/<relationship_id>/delete",
                  methods=["POST", "DELETE"], view_func=resource.delete_relationship)
 app.add_url_rule("/user/<kratos_username_or_user_id>",
                  methods=["GET"], view_func=user.query_user)
-
+app.add_url_rule("/user/<kratos_user_id>",
+                 methods=["PUT"], view_func=user.new_user)
+app.add_url_rule("/explore",
+                 methods=["GET"], view_func=project.explore)
 
 def create_app(test_config=None):
     if test_config is not None:
