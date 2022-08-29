@@ -16,7 +16,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
       - traefik.http.middlewares.oathkeeper.forwardauth.address=http://oathkeeper:4456/decisions
-      - traefik.http.middlewares.oathkeeper.forwardauth.authResponseHeaders=X-Id-Token,Authorization
+      - traefik.http.middlewares.oathkeeper.forwardauth.authResponseHeaders=X-Id-Token,Authorization,X-User
     networks:
       - internal
   oathkeeper:
@@ -61,7 +61,65 @@ services:
       - "7687:7687"
     networks:
       - internal
-  # ory:
-  #   image: oryd/kratos:v0.10.1
-  #   networks:
-  #     - internal
+  kratos-migrate:
+    image: oryd/kratos:v0.9.0-alpha.2
+    environment:
+      - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
+    volumes:
+      - type: volume
+        source: kratos-sqlite
+        target: /var/lib/sqlite
+        read_only: false
+      - type: bind
+        source: ./containers/kratos
+        target: /etc/config/kratos
+    command: -c /etc/config/kratos/kratos.yml migrate sql -e --yes
+    restart: on-failure
+    networks:
+      - internal
+  kratos:
+    depends_on:
+      - kratos-migrate
+    image: oryd/kratos:v0.9.0-alpha.2
+    ports:
+      - '4433:4433' # public
+      - '4434:4434' # admin
+    restart: unless-stopped
+    environment:
+      - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
+    command: serve -c /etc/config/kratos/kratos.yml --dev --watch-courier
+    volumes:
+      - type: bind
+        source: ./containers/kratos
+        target: /etc/config/kratos
+      - type: volume
+        source: kratos-sqlite
+        target: /var/lib/sqlite
+        read_only: false
+    networks:
+      - internal
+  kratos-selfservice-ui-node:
+    image: oryd/kratos-selfservice-ui-node:v0.9.0-alpha.2
+    environment:
+      - PORT=4455
+      - KRATOS_PUBLIC_URL=http://kratos:4433/
+      - KRATOS_BROWSER_URL=http://127.0.0.1:4433/
+    networks:
+      - internal
+    ports:
+      - "4455:4455"
+    restart: on-failure
+    labels:
+      - traefik.enable=true
+      # - traefik.http.routers.selfservice-router.rule=Host(`auth.twig.tchlabs.net`)
+      # - traefik.http.routers.selfservice-router.service=selfservice
+      # - traefik.http.services.selfservice.loadbalancer.server.port=4455
+  mailslurper:
+    image: oryd/mailslurper:latest-smtps
+    ports:
+      - '6936:4436'
+      - '6937:4437'
+    networks:
+      - internal
+volumes:
+  kratos-sqlite:

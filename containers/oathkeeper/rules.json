@@ -42,7 +42,7 @@
     },
     "authenticators": [
       {
-        "handler": "anonymous"
+        "handler": "cookie_session"
       }
     ],
     "authorizer": {
@@ -50,12 +50,7 @@
     },
     "mutators": [
       {
-        "handler": "header",
-        "config": {
-          "headers": {
-            "X-User": "{{ print .Subject }}"
-          }
-        }
+        "handler": "header"
       }
     ]
   },
@@ -73,7 +68,7 @@
     },
     "authenticators": [
       {
-        "handler": "anonymous"
+        "handler": "cookie_session"
       }
     ],
     "authorizer": {
@@ -128,7 +123,7 @@
       "url": "https://httpbin.org/anything/deny"
     },
     "match": {
-      "url": "http://<127.0.0.1|localhost>:6955/anything/deny",
+      "url": "http://<127.0.0.1|localhost|oathkeeper1.docker.localhost>:<6955|6980>/anything/deny",
       "methods": [
         "GET"
       ]
@@ -184,7 +179,7 @@
       "url": "https://httpbin.org/anything/id_token"
     },
     "match": {
-      "url": "http://<127.0.0.1|localhost>:6955/anything/id_token",
+      "url": "http://<127.0.0.1|localhost|oathkeeper1.docker.localhost>:<6955|6980>/anything/id_token",
       "methods": [
         "GET"
       ]
