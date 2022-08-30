@@ -5,12 +5,10 @@ services:
     # The official v2 Traefik docker image
     image: traefik:v2.8
     # Enables the web UI and tells Traefik to listen to docker
-    command: --api.insecure=true --providers.docker --log.level=DEBUG
+    command: --providers.docker
     ports:
       # The HTTP port
       - "80:80"
-      # The Web UI (enabled by --api.insecure=true)
-      - "8080:8080"
     volumes:
       # So that Traefik can listen to the Docker events
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -23,9 +21,6 @@ services:
     build:
       dockerfile: ./containers/oathkeeper/Dockerfile
       context: .
-    ports:
-      - "4455:4455"
-      - "4456:4456"
     networks:
       - internal # source-of-bug previously
   server:
@@ -35,20 +30,18 @@ services:
     image: twig_server:latest
     networks:
       - internal
-    ports:
-      - "5000:5000"
     labels:
       - traefik.enable=true
       - traefik.http.routers.api-router.middlewares=my-chain
       - traefik.http.middlewares.my-chain.chain.middlewares=cors,api-stripprefix,oathkeeper
       - traefik.http.middlewares.cors.headers.accesscontrolallowcredentials=true
       - traefik.http.middlewares.cors.headers.accesscontrolallowmethods=GET,POST,DELETE,PATCH,OPTIONS,PUT
-      - traefik.http.middlewares.cors.headers.accesscontrolalloworiginlist=http://127.0.0.1:5173
+      - traefik.http.middlewares.cors.headers.accesscontrolalloworiginlist=http://twig.tchlabs.net:5173
       - traefik.http.middlewares.cors.headers.accesscontrolallowheaders=Cookie,X-User
       - traefik.http.middlewares.cors.headers.accesscontrolexposeheaders=Cookie,X-User
       - traefik.http.middlewares.cors.headers.accesscontrolmaxage=100
       - traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api
-      - traefik.http.routers.api-router.rule=PathPrefix(`/api`)
+      - traefik.http.routers.api-router.rule=Host(`twig.tchlabs.net`)&&PathPrefix(`/api`)
       - traefik.http.routers.api-router.service=api
       - traefik.http.services.api.loadbalancer.server.port=5000
   neo4j:
@@ -79,9 +72,6 @@ services:
     depends_on:
       - kratos-migrate
     image: oryd/kratos:v0.9.0-alpha.2
-    ports:
-      - '4433:4433' # public
-      - '4434:4434' # admin
     restart: unless-stopped
     environment:
       - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
@@ -98,7 +88,7 @@ services:
       - internal
     labels:
       - traefik.enable=true
-      - traefik.http.routers.kratos-router.rule=PathPrefix(`/kratos`)
+      - traefik.http.routers.kratos-router.rule=Host(`twig.tchlabs.net`)&&PathPrefix(`/kratos`)
       - traefik.http.routers.kratos-router.middlewares=kratos-stripprefix,cors
       - traefik.http.middlewares.kratos-stripprefix.stripprefix.prefixes=/kratos
       - traefik.http.routers.kratos-router.service=kratos
@@ -106,27 +96,19 @@ services:
   kratos-selfservice-ui-node:
     image: oryd/kratos-selfservice-ui-node:v0.9.0-alpha.2
     environment:
-      - PORT=4454
+      - PORT=4455
       - KRATOS_PUBLIC_URL=http://kratos:4433/
-      - KRATOS_BROWSER_URL=http://127.0.0.1/kratos
+      - KRATOS_BROWSER_URL=http://twig.tchlabs.net/kratos
+      - BASE_PATH=http://twig.tchlabs.net/auth
     networks:
       - internal
-    ports:
-      - "4454:4454"
     restart: on-failure
     labels:
       - traefik.enable=true
-      - traefik.http.routers.selfservice-router.rule=PathPrefix(`/auth`)
+      - traefik.http.routers.selfservice-router.rule=Host(`twig.tchlabs.net`)&&PathPrefix(`/auth`)
       - traefik.http.routers.selfservice-router.middlewares=auth-stripprefix
       - traefik.http.middlewares.auth-stripprefix.stripprefix.prefixes=/auth
       - traefik.http.routers.selfservice-router.service=selfservice
-      - traefik.http.services.selfservice.loadbalancer.server.port=4454
-  mailslurper:
-    image: oryd/mailslurper:latest-smtps
-    ports:
-      - '4436:4436'
-      - '4437:4437'
-    networks:
-      - internal
+      - traefik.http.services.selfservice.loadbalancer.server.port=4455
 volumes:
   kratos-sqlite:
