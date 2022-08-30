@@ -35,7 +35,7 @@ def index():
 
 app.add_url_rule("/project/new", 
                  methods=["PUT"], view_func=project.new_project)
-app.add_url_rule("/api/project/<project_id>",
+app.add_url_rule("/project/<project_id>",
                  methods=["GET"], view_func=project.query_project)
 app.add_url_rule("/project/<project_id>/edit",
                  methods=["POST", "PATCH"], view_func=project.edit_project)

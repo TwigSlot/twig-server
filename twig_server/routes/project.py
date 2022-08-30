@@ -64,19 +64,15 @@ def list_relationships(project: Project):
 
 
 def edit_project(project_id: str):
-    kratos_user_id = request.headers.get('X-User')
-    debug = app.app.config['DEBUG']
-    if(kratos_user_id is None and debug): # for dev
-        kratos_user_id = request.args.get("user") 
 
     project = Project(current_app.config["driver"], uid=int(project_id))
     res = project.query_uid()
     if res is None:
         return "project not found", 404
 
+    kratos_user_id = request.headers.get('X-User')
     owner = project.get_owner()
     app.app.logger.info(kratos_user_id)
-    app.app.logger.info(owner['kratos_user_id'])
     if(kratos_user_id != owner['kratos_user_id']):
         return "not authorized", 401
 
@@ -88,6 +84,12 @@ def edit_project(project_id: str):
 
 def delete_project(project_id: str):
     project = Project(current_app.config["driver"], uid=int(project_id))
+
+    kratos_user_id = request.headers.get('X-User')
+    owner = project.get_owner()
+    if(kratos_user_id != owner['kratos_user_id']):
+        return "not authorized", 401
+
     res = project.query_uid()
     if res:
         project.delete()

@@ -1,15 +1,12 @@
-from operator import concat
-from re import I
-from flask import jsonify, current_app, request
+from flask import jsonify, current_app, request, redirect, url_for
 from twig_server.database.Project import Project
 
-from twig_server.database.connection import Neo4jConnection
 from twig_server.database.User import User
-from twig_server.database.Resource import Resource
 from neo4j import graph
 
 from twig_server.database.native import Node
 import twig_server.app as app
+
 def list_projects(user: User):
     projects = Project.list_projects(current_app.config['driver'].conn, user)
     ret: list = []
@@ -30,8 +27,11 @@ def new_user(kratos_user_id: str):
     res = user.query_kratos_user_id()
     if res:
         return "user was already created", 200
-    user.create()
-    return concat_user_info_with_project_list(user)
+    if(kratos_user_id == request.headers.get('X-User')):
+        user.create()
+        return concat_user_info_with_project_list(user)
+    else:
+        return "not authorized", 401
  
 def query_user(kratos_username_or_user_id: str):
     user = User(
@@ -48,7 +48,8 @@ def query_user(kratos_username_or_user_id: str):
     if res:
         return concat_user_info_with_project_list(user)
     else:
-        user.create()
+        return redirect(url_for(endpoint='new_user', 
+            values={'kratos_user_id': kratos_username_or_user_id}))
         res = user.query_kratos_user_id()
         return concat_user_info_with_project_list(user)
 

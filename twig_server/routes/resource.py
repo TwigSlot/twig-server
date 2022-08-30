@@ -8,7 +8,7 @@ from neo4j import graph
 
 from twig_server.database.native import Relationship
 
-def new_node(project) -> str:
+def new_node(project):
     resource = Resource(current_app.config['driver'])
     resource.create(project)
     return jsonify(resource.properties)
@@ -23,6 +23,12 @@ def new_item(project_id: str):
     assert project_uid is not None
     project = Project(current_app.config["driver"], uid=project_uid)
     project.query_uid()
+
+    kratos_user_id = request.headers.get('X-User')
+    owner = project.get_owner()
+    if(kratos_user_id != owner['kratos_user_id']):
+        return "not authorized", 401
+
     assert project.db_obj is not None
     if(request.args.get('item') == 'node'):
         return new_node(project), 200
@@ -48,7 +54,10 @@ def edit_resource(project_id: str, resource_id: str):
     res = resource.query_uid()
     assert resource.db_obj is not None
 
-    # TODO check resource owner == project
+    kratos_user_id = request.headers.get('X-User')
+    owner = project.get_owner()
+    if(kratos_user_id != owner['kratos_user_id']):
+        return "not authorized", 401
 
     if res is None:
         return "resource not found", 404
@@ -68,7 +77,10 @@ def delete_resource(project_id: str, resource_id: str):
     resource = Resource(current_app.config["driver"], uid=resource_uid)
     res = resource.query_uid()
 
-    # TODO check resource owner == project
+    kratos_user_id = request.headers.get('X-User')
+    owner = project.get_owner()
+    if(kratos_user_id != owner['kratos_user_id']):
+        return "not authorized", 401
 
     if(res):
         resource.delete()
@@ -82,6 +94,11 @@ def delete_relationship(project_id: str, relationship_id: str):
     project = Project(current_app.config["driver"], uid=project_uid)
     project.query_uid()
     assert project.db_obj is not None
+
+    kratos_user_id = request.headers.get('X-User')
+    owner = project.get_owner()
+    if(kratos_user_id != owner['kratos_user_id']):
+        return "not authorized", 401
 
     relationship_uid= int(relationship_id)
     rls = Relationship(current_app.config["driver"], uid=relationship_uid)
