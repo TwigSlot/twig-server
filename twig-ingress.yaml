@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: twig-ingress
+  namespace: production
+
+spec:
+  rules:
+    - host: twig.tchlabs.net
+      http:
+        paths:
+          - path: /auth
+            pathType: Prefix
+            backend:
+              service:
+                name:  selfservice-service
+                port:
+                  number: 4455
+          - path: /kratos
+            pathType: Prefix
+            backend:
+              service:
+                name:  kratos
+                port:
+                  number: 4433
