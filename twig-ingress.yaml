@@ -2,9 +2,9 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: twig-ingress
-  namespace: production
-
+  namespace: default
 spec:
+  ingressClassName: traefik-router
   rules:
     - host: twig.tchlabs.net
       http:
@@ -20,6 +20,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name:  kratos
+                name:  kratos-service
                 port:
                   number: 4433

@@ -23,7 +23,7 @@ spec:
         - name: KRATOS_PUBLIC_URL
           value: http://kratos-service:4433/
         - name: KRATOS_BROWSER_URL
-          value: http://127.0.0.1/kratos
+          value: http://twig.tchlabs.net/kratos
 ---
 apiVersion: v1
 kind: Service
@@ -38,44 +38,56 @@ spec:
       port: 4455
       targetPort: 3000
       nodePort: 30000
-# ---
-# apiVersion: apps/v1
-# kind: Deployment
-# metadata:
-#   name: kratos-deployment
-# spec:
-#   replicas: 1
-#   selector:
-#     matchLabels:
-#       app: kratos-pod
-#   template:
-#     metadata:
-#       labels:
-#         app: selfservice-pod
-#     spec:
-#       containers:
-#       - name: kratos-selfservice-ui-node
-#         image: oryd/kratos-selfservice-ui-node:v0.9.0-alpha.2
-#         ports:
-#         - containerPort: 3000
-#         env:
-#         - name: PORT
-#           value: "3000"
-#         - name: KRATOS_PUBLIC_URL
-#           value: http://kratos-service:4433/
-#         - name: KRATOS_BROWSER_URL
-#           value: http://127.0.0.1/kratos
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: selfservice-service
-# spec:
-#   selector:
-#     app: selfservice-pod
-#   type: LoadBalancer
-#   ports:
-#     - protocol: TCP
-#       port: 4455
-#       targetPort: 3000
-#       nodePort: 30000
+      name: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kratos-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kratos-pod
+  template:
+    metadata:
+      labels:
+        app: kratos-pod
+    spec:
+      volumes:
+        - name: sqlite-pv-storage
+          persistentVolumeClaim:
+            claimName: twig-pvc
+        - name: configmap-kratos-volume
+          configMap:
+            name: configmap-kratos
+      containers:
+      - name: kratos-pod-container
+        image: oryd/kratos:v0.9.0-alpha.2
+        ports:
+        - containerPort: 4433 # public
+        # - containerPort: 4434 # admin (not in use)
+        env:
+        - name: DSN
+          value: sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
+        volumeMounts: 
+        - name: sqlite-pv-storage
+          mountPath: /var/lib/sqlite
+        - name: configmap-kratos-volume
+          mountPath: /etc/config/kratos
+        args: ["serve","-c","/etc/config/kratos/kratos.yml","--dev","--watch-courier"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kratos-service
+spec:
+  selector:
+    app: kratos-pod
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 4433
+      targetPort: 4433
+      nodePort: 30002
+      name: http
