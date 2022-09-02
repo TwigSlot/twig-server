@@ -6,15 +6,15 @@ data:
   kratos.yml: |
     version: v1.0.1
 
-    dsn: memory
+    # dsn: memory
 
     serve:
       public:
-        base_url: http://127.0.0.1:4433/
+        base_url: https://twig.tchlabs.net/kratos
         cors:
           enabled: true
           allowed_origins:
-            - http://127.0.0.1:5173
+            - https://twig.tchlabs.net
             - http://localhost:5173
           allowed_methods:
             - POST
@@ -23,12 +23,12 @@ data:
             - PATCH
             - DELETE
       admin:
-        base_url: http://kratos:4434/
+        base_url: http://kratos-service:4434/
 
     selfservice:
-      default_browser_return_url: http://127.0.0.1:5173
+      default_browser_return_url: https://twig.tchlabs.net
       allowed_return_urls:
-        - http://127.0.0.1:3000
+        - https://twig.tchlabs.net/auth
 
       methods:
         password:
@@ -36,29 +36,29 @@ data:
 
       flows:
         error:
-          ui_url: http://127.0.0.1:3000/error
+          ui_url: https://twig.tchlabs.net/auth/error
 
         settings:
-          ui_url: http://127.0.0.1:3000/settings
+          ui_url: https://twig.tchlabs.net/auth/settings
           privileged_session_max_age: 15m
           after:
-            default_browser_return_url: http://127.0.0.1:5173
+            default_browser_return_url: https://twig.tchlabs.net
 
         recovery:
           enabled: true
-          ui_url: http://127.0.0.1:3000/recovery
+          ui_url: https://twig.tchlabs.net/auth/recovery
 
         verification:
           enabled: true
-          ui_url: http://127.0.0.1:3000/verification
+          ui_url: https://twig.tchlabs.net/auth/verification
 
         login:
-          ui_url: http://127.0.0.1:3000/login
+          ui_url: https://twig.tchlabs.net/auth/login
           lifespan: 10m
 
         registration:
           lifespan: 10m
-          ui_url: http://127.0.0.1:3000/registration
+          ui_url: https://twig.tchlabs.net/auth/registration
           after:
             password:
               hooks:
