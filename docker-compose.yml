@@ -6,6 +6,8 @@ services:
       dockerfile: ./containers/flask/Dockerfile
       context: .
     image: twig_server:latest
+    dns:
+      - 8.8.8.8 # this solves networking issues
     networks:
       - internal
     ports:
