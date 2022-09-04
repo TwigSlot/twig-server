@@ -8,6 +8,7 @@ serve:
     cors:
       enabled: true
       allowed_origins:
+        - http://127.0.0.1:5173/
         - http://127.0.0.1:5173
         - http://localhost:5173
       allowed_methods:
@@ -16,6 +17,14 @@ serve:
         - PUT
         - PATCH
         - DELETE
+      allowed_headers:
+        - Authorization
+        - Cookie
+        - Content-Type
+        - X-User
+      exposed_headers:
+        - Content-Type
+        - Set-Cookie
   admin:
     base_url: http://kratos:4434/
 
