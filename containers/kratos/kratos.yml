@@ -16,6 +16,10 @@ serve:
         - PUT
         - PATCH
         - DELETE
+      allowed_headers:
+        - X-User
+      exposed_headers:
+        - X-User
   admin:
     base_url: http://kratos:4434/
 
