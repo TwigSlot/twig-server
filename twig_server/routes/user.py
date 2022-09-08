@@ -12,9 +12,13 @@ def list_projects(user: User):
     ret: list = []
     for x in projects:
         col = x.get(x._Record__keys[2])
+        owner = Node.extract_properties(x.get(x._Record__keys[0]))['kratos_user_id']
         if(type(col) is graph.Node):
             # is a node
-            ret.append(Node.extract_properties(col))
+            ret.append({
+                'project':Node.extract_properties(col),
+                'owner': owner
+                })
     return ret
 
 def concat_user_info_with_project_list(user: User):

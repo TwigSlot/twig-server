@@ -81,7 +81,10 @@ class Project(Node):
     @classmethod
     def explore_projects(cls, db_conn: Neo4jDriver) -> List[Record]:
         queryStr = \
-            f"MATCH (m:{Project._label_name}) RETURN m"
+            f"MATCH (a:{User._label_name})\
+            -[{Project._label_owner_relationship}]->\
+            (m:{Project._label_name}) \
+            RETURN a,m"
         res_list = []
         with db_conn.session() as session:
             res = session.run(queryStr)
