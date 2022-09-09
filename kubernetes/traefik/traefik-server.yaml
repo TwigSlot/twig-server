@@ -47,9 +47,11 @@ spec:
         - name: traefik
           image: traefik:v2.8
           args:
-            - --api.insecure
-            - --accesslog
+            # - --api.insecure
+            # - --accesslog
             - --entrypoints.web.Address=:80
+            - --entrypoints.web.http.redirections.entryPoint.to=websecure
+            - --entrypoints.web.http.redirections.entryPoint.scheme=https
             - --entrypoints.websecure.Address=:443
             - --providers.kubernetescrd
             - --certificatesresolvers.myresolver.acme.dnschallenge=true
