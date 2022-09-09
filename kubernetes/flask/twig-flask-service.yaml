@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: flask-container
-        image: tch1001/twig_server:v1.0
+        image: tch1001/twig_server:v1.1
         ports:
         - containerPort: 5000
 
