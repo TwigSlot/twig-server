@@ -29,3 +29,18 @@ docker-compose \
     -f docker-compose-debug.yml \
     up -d --build --force-recreate server
 ```
+
+## Errors
+### Servers inaccessible on Mac OS
+If you're developing on mac, which does not have native docker virtualization support, `http://localhost:3000` and related servers may not be accessible. We will use SSH portforwarding to solve this.
+
+If you run docker on mac using `eval $(docker-machine env default)`, the networking issues are due to the fact that docker containers run inside a virtualbox container. A quick fix for this is to run
+```shell
+ssh docker@$(docker-machine ip default) -N -f \
+    -L 3000:localhost:3000 \
+    -L 5000:localhost:5000 \
+    -L 4433:localhost:4433 \
+    -L 4434:localhost:4434 \
+    -L 4455:localhost:4455
+```
+A password will be prompted for the virtualbox container, which is `tcuser` by default.
