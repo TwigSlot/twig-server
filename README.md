@@ -39,8 +39,18 @@ If you run docker on mac using `eval $(docker-machine env default)`, the network
 ssh docker@$(docker-machine ip default) -N -f \
     -L 3000:localhost:3000 \
     -L 5000:localhost:5000 \
+    -L 5001:localhost:5001 \ # for autofill server in twig-research
     -L 4433:localhost:4433 \
     -L 4434:localhost:4434 \
     -L 4455:localhost:4455
 ```
 A password will be prompted for the virtualbox container, which is `tcuser` by default.
+
+## Deployment (Kubernetes)
+This is abit complicated as it involves many moving parts, so this reference is more for myself. You may contact me if you wish to help support deployment.
+```shell
+docker build -t tch1001/twig_server:v1.1 . \
+    -f ./containers/flask/Dockerfile
+docker push tch1001/twig_server:v1.1
+kubectl apply -f <all the files>
+```
