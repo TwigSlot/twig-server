@@ -51,16 +51,6 @@ spec:
       services:
         - name: flask-service
           port: 5000
-    - match: Host(`twig.tchlabs.net`)
-      kind: Rule
-      services:
-        - name: nginx-service
-          port: 80
-    # - match: Host(`twig.tchlabs.net`) 
-    #   kind: Rule
-    #   services:
-    #     - name: selfservice-service
-    #       port: 4455
   tls:
     certResolver: myresolver
     domains: 
