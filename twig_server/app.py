@@ -31,7 +31,61 @@ with app.app_context():
 @app.route("/")
 def index():
     return "Index"
+def list_resources(project: Project):
+    resources = Resource.list_resources(current_app.config['driver'].conn, project)
+    ret: list = []
+    for x in resources:
+        row = []
+        for i in range(len(x)):
+            col = x.get(x._Record__keys[i])
+            if(type(col) is graph.Node):
+                row.append(col._properties)
+            else:
+                row.append(col._properties)
+        ret.append(row)
+    return ret
+    
+@app.route("/new/resource", methods=["GET", "POST"])
+def new_resource():
+    project_uid = int(request.args.get("project"))
+    project = Project(current_app.config["driver"], uid=project_uid)
+    project.query_uid()
+    resource = Resource(current_app.config['driver']).create(project)
+    return str(resource._properties)
 
+
+@app.route("/new/project", methods=["GET", "POST"])
+def new_project():
+    kratos_user_id = request.args.get("user")
+    user = User(current_app.config["driver"], kratos_user_id=kratos_user_id)
+    user.query_kratos_user_id()
+    project = Project(current_app.config["driver"], owner=user).create(user)
+    return str(project._properties)
+
+def list_projects(user: User):
+    projects = Project.list_projects(current_app.config['driver'].conn, user)
+    ret: list = []
+    for x in projects:
+        row = []
+        for i in range(len(x)):
+            col = x.get(x._Record__keys[i])
+            if(type(col) is graph.Node):
+                # is a node
+                row.append(col._properties)
+            else:
+                # is a relationship
+                row.append(col._properties)
+        ret.append(row)
+        
+    return str(ret)
+
+@app.route('/project/<project_id>', methods=["GET"])
+def query_project(project_id: str):
+    project = Project(current_app.config['driver'], uid = int(project_id))
+    res = project.query_uid()
+    if res:
+        return list_resources(project=project)
+    return 'no such project'
 
 app.add_url_rule("/project/new", 
                  methods=["PUT"], view_func=project.new_project)

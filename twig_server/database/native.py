@@ -2,7 +2,7 @@
 # mostly holds helper classes
 
 
-from typing import Any, List, Mapping, Optional
+from typing import Any, Mapping, Optional
 from twig_server.database.connection import Neo4jConnection
 from neo4j import Neo4jDriver, Result, Record
 
@@ -26,20 +26,14 @@ class Node:
         self.query_uid()  # try to retrieve existing database info for EXISTING UID
 
     # sync local properties with database data
-    @classmethod
-    def extract_properties(cls, db_obj: Any):
-        assert db_obj is not None
-        properties = {}
-        properties["uid"] = int(db_obj.id)
-        for key in db_obj._properties:
-            properties[key] = db_obj[key]
-        return properties
     def sync_properties(self) -> None:
         self.properties = {}
         if self.db_obj == None:
             return  # if no response, properties will be empty
         assert self.db_obj is not None  # for type checking
-        self.properties = Node.extract_properties(self.db_obj)
+        self.properties["uid"] = int(self.db_obj.id)
+        for key in self.db_obj._properties:
+            self.properties[key] = self.db_obj[key]
 
     def query_uid(self, label_name: Optional[str] = None) -> Optional[Record]:
         if "uid" not in self.properties:  # querying for this UID
@@ -136,7 +130,7 @@ class Relationship:
               CREATE (a)-[n{(':'+label_name) if label_name else ''}]->(b) RETURN n"
         with self.db_conn.session() as session:
             res: Result = session.run(
-                queryStr, {"a_id": int(self.a_id), "b_id": int(self.b_id)}
+                queryStr, {"a_id": self.a_id, "b_id": self.b_id}
             )
             self.db_obj = self.extract_relationship(res)
             self.sync_properties()
@@ -150,21 +144,15 @@ class Relationship:
             return None
         return row
 
-    @classmethod # TODO abstract this away (redefinition in Node)
-    def extract_properties(cls, db_obj: Any):
-        assert db_obj is not None
-        properties = {}
-        properties["uid"] = int(db_obj.id)
-        for key in db_obj._properties:
-            properties[key] = db_obj[key]
-        return properties
     # sync local properties with database data
     def sync_properties(self) -> None:
         self.properties = {}
         if self.db_obj == None:
             return  # if no response, properties will be empty
         assert self.db_obj is not None  # for type checking
-        self.properties = Relationship.extract_properties(self.db_obj)
+        self.properties["uid"] = int(self.db_obj.id)
+        for key in self.db_obj._properties:
+            self.properties[key] = self.db_obj[key]
 
     def query_uid(self, label_name: Optional[str] = None) -> Optional[Result]:
         queryStr: str = f"MATCH (a)-[n{(':'+label_name) if label_name else ''}]->(b) WHERE id(n)=$uid RETURN n"
@@ -174,36 +162,3 @@ class Relationship:
             self.sync_properties()
 
         return self.db_obj
-
-    def delete(self) -> None:
-        if "uid" not in self.properties:
-            raise Exception("No UID to delete")
-        queryStr = f"MATCH (a)-[n]->(b) WHERE id(n)=$uid DELETE n"
-        with self.db_conn.session() as session:
-            res = session.run(queryStr, {"uid": self.properties["uid"]})
-            self.db_obj = self.extract_relationship(res)
-
-            self.sync_properties()
-
-    @classmethod
-    # TODO fix some circular imports
-    def list_relationships(cls, db_conn: Neo4jDriver, project: Any) -> List[Record]:
-        # queryStr = f"MATCH (n:{Project._label_name})\
-        #             -[{Resource._label_project_relationship}]->\
-        #             (m:{Resource._label_name}) \
-        #             -[e]-> \
-        #             (a) \
-        #         WHERE id(n)=$uid \
-        #         RETURN m,e,a"
-        queryStr = f"MATCH (n:Project)\
-                    -[Has_Resource]->\
-                    (m:Resource) \
-                    -[e]-> \
-                    (a:Resource) \
-                WHERE id(n)=$uid \
-                RETURN m,e,a"
-        res_list = []
-        with db_conn.session() as session:
-            res = session.run(queryStr, {'uid': project.properties['uid']})
-            res_list = [x for x in res]
-        return res_list
