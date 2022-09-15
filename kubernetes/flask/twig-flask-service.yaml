@@ -14,7 +14,26 @@ spec:
     spec:
       containers:
       - name: flask-container
-        image: tch1001/twig_server:v1.1
+        image: tch1001/twig_server:latest
+        env: 
+          - name: NEO4J_SERVER_URL
+            valueFrom:
+              secretKeyRef: 
+                name: flask-secret
+                key: NEO4J_SERVER_URL
+                optional: false
+          - name: NEO4J_USERNAME
+            valueFrom:
+              secretKeyRef: 
+                name: flask-secret
+                key: NEO4J_USERNAME
+                optional: false
+          - name: NEO4J_PASSWORD
+            valueFrom:
+              secretKeyRef: 
+                name: flask-secret
+                key: NEO4J_PASSWORD
+                optional: false
         ports:
         - containerPort: 5000
 
