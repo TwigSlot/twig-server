@@ -47,7 +47,7 @@ class Node:
             return None
         queryStr = f"MATCH (n{(':'+label_name) if label_name else ''}) WHERE id(n)=$uid RETURN n"
         with self.db_conn.session() as session:
-            res = session.run(queryStr, {"uid": int(self.properties["uid"])})
+            res = session.run(queryStr, {"uid": self.properties["uid"]})
             self.db_obj = self.extract_node(res)
             self.sync_properties()
         return self.db_obj
