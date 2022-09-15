@@ -57,10 +57,12 @@ class Resource(Node):
 
     
     @classmethod
-    def update_all_positions(cls, db_conn: Neo4jDriver, new_positions: dict) -> None:
+    def update_all_positions(cls, db_conn: Neo4jConnection, new_positions: dict, project_id: int) -> None:
         for uid in new_positions:
             r = Resource(db_conn, uid=int(uid))
             r.query_uid()
+            if(r.get_project().properties['uid'] != project_id):
+                continue
             if('uid' in r.properties):
                 r.update_position(new_positions[uid])
 
@@ -77,7 +79,6 @@ class Resource(Node):
                     'uid': self.properties['uid']
                 }
             )
-            app.app.logger.info(queryStr)
             self.db_obj = self.extract_node(res)
             self.sync_properties()
         return self.db_obj
@@ -95,3 +96,18 @@ class Resource(Node):
             res = session.run(queryStr, {'uid': project.properties['uid']})
             res_list = [x for x in res]
         return res_list
+
+    def get_project(self) -> Project:
+        queryStr = \
+            f"MATCH (n:{Project._label_name})\
+                    -[e:{Resource._label_project_relationship}]->\
+                    (m:{Resource._label_name}) \
+                WHERE id(m)=$uid \
+                RETURN n"
+        with self.db_conn.session() as session:
+            res = session.run(queryStr, {'uid': self.properties['uid']})
+            one_res = res.single()
+            project_properties = Node.extract_properties(one_res.get(one_res._Record__keys[0]))
+            self.project = Project(self.conn, uid=project_properties['uid'])
+            self.project.sync_properties()
+        return self.project

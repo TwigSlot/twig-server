@@ -17,7 +17,6 @@ class Neo4jConnection:
         )
 
     def verify_connectivity(self):
-        app.app.logger.info(f"connecting to {self.url} with username {self.username} and password {self.password}")
         self.conn.verify_connectivity()
 
     def close(self):

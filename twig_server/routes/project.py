@@ -73,7 +73,6 @@ def edit_project(project_id: str):
 
     kratos_user_id = request.headers.get('X-User')
     owner = project.get_owner()
-    app.app.logger.info(kratos_user_id)
     if(kratos_user_id != owner['kratos_user_id']):
         return "not authorized", 401
 
@@ -99,13 +98,14 @@ def delete_project(project_id: str):
         return jsonify({"success": False}), 404
 
 def update_positions(project_id: str):
-    app.app.logger.info(project_id)
-    app.app.logger.info(request.json)
-    try:
-        Resource.update_all_positions(current_app.config['driver'], request.json)
-    except Exception as e:
-        raise e
-        return "updating went wrong", 404
+    p = Project(current_app.config['driver'], uid=project_id)
+    pr = p.query_uid()
+    kratos_user_id = request.headers.get('X-User')
+    owner = p.get_owner()
+    if(owner['kratos_user_id'] != kratos_user_id):
+        return "not authorized", 401
+    Resource.update_all_positions(
+            current_app.config['driver'], request.json, project_id=int(project_id))
     return "ok", 200
 def query_project(project_id: str):
     list_items: bool = False

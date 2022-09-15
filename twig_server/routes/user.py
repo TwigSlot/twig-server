@@ -28,7 +28,6 @@ def new_user(kratos_user_id: str):
     user = User(
         current_app.config["driver"], kratos_user_id=kratos_user_id
     )
-    app.app.logger.info(kratos_user_id)
     res = user.query_kratos_user_id()
     if res:
         return "user was already created", 200
