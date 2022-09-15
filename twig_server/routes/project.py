@@ -98,7 +98,15 @@ def delete_project(project_id: str):
     else:
         return jsonify({"success": False}), 404
 
-
+def update_positions(project_id: str):
+    app.app.logger.info(project_id)
+    app.app.logger.info(request.json)
+    try:
+        Resource.update_all_positions(current_app.config['driver'], request.json)
+    except Exception as e:
+        raise e
+        return "updating went wrong", 404
+    return "ok", 200
 def query_project(project_id: str):
     list_items: bool = False
     req_list_items = request.args.get("list_items")

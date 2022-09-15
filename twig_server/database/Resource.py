@@ -5,6 +5,8 @@ from twig_server.database.native import Node, Relationship
 
 from neo4j import Record, Neo4jDriver
 
+import twig_server.app as app
+
 class Resource(Node):
     _label_name = "Resource"
     _label_project_relationship = "Has_Resource"
@@ -51,6 +53,33 @@ class Resource(Node):
         self.set("description", self.description)
         self.sync_properties()
         self.set_project(project)
+        return self.db_obj
+
+    
+    @classmethod
+    def update_all_positions(cls, db_conn: Neo4jDriver, new_positions: dict) -> None:
+        for uid in new_positions:
+            r = Resource(db_conn, uid=int(uid))
+            r.query_uid()
+            if('uid' in r.properties):
+                r.update_position(new_positions[uid])
+
+    def update_position(self, new_pos: dict) -> Record:
+        if "uid" not in self.properties:
+            return None
+        queryStr = f"MATCH (n:{Resource._label_name}) WHERE id(n)=$uid SET n.pos_x = $x SET n.pos_y = $y RETURN n"
+        with self.db_conn.session() as session:
+            res = session.run(
+                queryStr,
+                {
+                    'x': round(new_pos['x']),
+                    'y': round(new_pos['y']),
+                    'uid': self.properties['uid']
+                }
+            )
+            app.app.logger.info(queryStr)
+            self.db_obj = self.extract_node(res)
+            self.sync_properties()
         return self.db_obj
 
     @classmethod
