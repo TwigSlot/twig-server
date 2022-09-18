@@ -13,11 +13,13 @@ def list_projects(user: User):
     for x in projects:
         col = x.get(x._Record__keys[2])
         owner = Node.extract_properties(x.get(x._Record__keys[0]))['kratos_user_id']
+        owner_user = User(current_app.config['driver'], kratos_user_id = owner)
+        owner_user.query_kratos_user_id()
         if(type(col) is graph.Node):
             # is a node
             ret.append({
                 'project':Node.extract_properties(col),
-                'owner': owner
+                'owner': owner_user.properties
                 })
     return ret
 
@@ -68,5 +70,4 @@ def update_user(kratos_user_id: str):
             user.set(key, value)
         return concat_user_info_with_project_list(user)
     else:
-        app.app.logger.info('else')
         return "no such user", 404
