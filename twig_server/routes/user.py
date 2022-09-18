@@ -53,3 +53,20 @@ def query_user(kratos_username_or_user_id: str):
         return concat_user_info_with_project_list(user)
     else:
         return new_user(kratos_user_id=kratos_username_or_user_id)
+    
+def update_user(kratos_user_id: str):
+    user = User(
+        current_app.config["driver"], kratos_user_id = kratos_user_id
+    )
+    res = user.query_kratos_user_id()
+    app.app.logger.info(user)
+    if res:
+        for key in request.args:
+            if(key == 'kratos_user_id'):
+                return "you cannot change your kratos_user_id", 401
+            value = request.args.get(key)
+            user.set(key, value)
+        return concat_user_info_with_project_list(user)
+    else:
+        app.app.logger.info('else')
+        return "no such user", 404

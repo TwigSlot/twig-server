@@ -59,6 +59,8 @@ app.add_url_rule("/user/<kratos_user_id>",
                  methods=["PUT"], view_func=user.new_user)
 app.add_url_rule("/explore",
                  methods=["GET"], view_func=project.explore)
+app.add_url_rule("/user/update/<kratos_user_id>",
+                 methods=["POST"], view_func=user.update_user)
 
 def create_app(test_config=None):
     if test_config is not None:
