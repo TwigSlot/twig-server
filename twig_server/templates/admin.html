@@ -8,18 +8,17 @@
             the text field element and an array of possible autocompleted values:*/
             var currentFocus;
             /*execute a function when someone writes in the text field:*/
-            inp.addEventListener("input", function (e) {
-                var a, b, i, val = this.value;
+            function onInput(obj){
+                var a, b, i, val = obj.value;
                 /*close any already open lists of autocompleted values*/
                 closeAllLists();
-                if (!val) { return false; }
                 currentFocus = -1;
                 /*create a DIV element that will contain the items (values):*/
                 a = document.createElement("DIV");
-                a.setAttribute("id", this.id + "autocomplete-list");
+                a.setAttribute("id", obj.id + "autocomplete-list");
                 a.setAttribute("class", "autocomplete-items");
                 /*append the DIV element as a child of the autocomplete container:*/
-                this.parentNode.appendChild(a);
+                obj.parentNode.appendChild(a);
                 /*for each item in the array...*/
                 for (i = 0; i < arr.length; i++) {
                     /*check if the item starts with the same letters as the text field value:*/
@@ -42,7 +41,14 @@
                         a.appendChild(b);
                     }
                 }
+            }
+            inp.addEventListener("input", function (e) {
+                onInput(this)
             });
+            inp.addEventListener("focus", async function(e){
+                console.log('focus', e.target)
+                onInput(this)
+            })
             /*execute a function presses a key on the keyboard:*/
             inp.addEventListener("keydown", function (e) {
                 var x = document.getElementById(this.id + "autocomplete-list");
@@ -96,22 +102,48 @@
             }
             /*execute a function when someone clicks in the document:*/
             document.addEventListener("click", function (e) {
-                closeAllLists(e.target);
+                console.log('click', e.target)
+                try {
+                    x = (Array.from(e.target.parentNode.classList))
+                    if(x.indexOf('autocomplete') == -1)
+                        closeAllLists()
+                }catch {
+
+                }
             });
         }
-        function get_list(class_name){
+        function get_list(class_name) {
             var ans = [];
             Array.from(document.getElementsByClassName(class_name)).forEach(element => {
-                if(ans.indexOf(element.innerHTML) == -1) 
+                if (ans.indexOf(element.innerHTML) == -1)
                     ans.push(element.innerHTML)
             });
             return ans
         }
         function onload() {
-            autocomplete(document.getElementById('namespace'), get_list('namespace_data'))
-            autocomplete(document.getElementById('object'), get_list('object_data'))
-            autocomplete(document.getElementById('relation'), get_list('relation_data'))
-            autocomplete(document.getElementById('subject_id'), get_list('subject_data'))
+            console.log('hi')
+            autocomplete(document.getElementById('expand-namespace'), get_list('namespace_data'))
+            autocomplete(document.getElementById('expand-object'), get_list('object_data'))
+            autocomplete(document.getElementById('expand-relation'), get_list('relation_data'))
+            autocomplete(document.getElementById('expand-max-depth'), [])
+            autocomplete(document.getElementById('check-namespace'), get_list('namespace_data'))
+            autocomplete(document.getElementById('check-object'), get_list('object_data'))
+            autocomplete(document.getElementById('check-relation'), get_list('relation_data'))
+            autocomplete(document.getElementById('check-subject_id'), get_list('subject_data'))
+            document.getElementById('expand-form').addEventListener('submit', function(e){
+                e.preventDefault()
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function(){
+                    if(this.readyState == 4 && this.status == 200){
+                        document.getElementById('expand-result').innerHTML = xhttp.responseText
+                    }
+                }
+                xhttp.open("GET", `${window.location.href}/expand`, true)
+                xhttp.send();
+            })
+            document.getElementById('check-form').addEventListener('submit', function(e){
+                e.preventDefault()
+            })
         }
     </script>
 </head>
@@ -144,33 +176,58 @@
         </h1>
     </div>
     <div class="row">
-        <div class="column">hi</div>
         <div class="column">
-            <h3>
-                {{ check_status }}
-            </h3>
-            <form autocomplete="off" action="/admin/check" method="POST">
-                <label for="namespace">Namespace: </label>
+            <form id="expand-form" autocomplete="off" action="/admin/expand" method="POST">
+                <label for="expand-namespace">Namespace: </label>
                 <div class="autocomplete">
-                    <input type="text" id="namespace" name="namespace" value="{{ request.form['namespace'] }}" />
+                    <input type="text" id="expand-namespace" name="namespace" />
                 </div><br>
 
-                <label for="object">Object: </label>
+                <label for="expand-object">Object: </label>
                 <div class="autocomplete">
-                    <input type="text" id="object" name="object" value="{{ request.form['object'] }}" />
+                    <input type="text" id="expand-object" name="object" />
                 </div><br>
 
-                <label for="relation">Relation: </label>
+                <label for="expand-relation">Relation: </label>
                 <div class="autocomplete">
-                    <input type="text" id="relation" name="relation" value="{{ request.form['relation'] }}" />
+                    <input type="text" id="expand-relation" name="relation" />
                 </div><br>
 
-                <label for="subject_id">Subject: </label>
+                <label for="expand-max-depth">Max-Depth: </label>
                 <div class="autocomplete">
-                    <input type="text" id="subject_id" name="subject_id" value="{{ request.form['subject_id'] }}" />
+                    <input type="text" id="expand-max-depth" name="max-depth" />
+                </div><br>
+                <input type="submit" value='Expand' />
+            </form>
+            <h3> Expand Result: </h3>
+            <h3 id="expand-result"> </h3>
+        </div>
+
+        <div class="column">
+            <form id="check-form" autocomplete="off">
+                <label for="check-namespace">Namespace: </label>
+                <div class="autocomplete">
+                    <input type="text" id="check-namespace" name="namespace" />
+                </div><br>
+
+                <label for="check-object">Object: </label>
+                <div class="autocomplete">
+                    <input type="text" id="check-object" name="object" />
+                </div><br>
+
+                <label for="check-relation">Relation: </label>
+                <div class="autocomplete">
+                    <input type="text" id="check-relation" name="relation" />
+                </div><br>
+
+                <label for="check-subject_id">Subject: </label>
+                <div class="autocomplete">
+                    <input type="text" id="check-subject_id" name="subject_id" />
                 </div><br>
                 <input type="submit" value='Check' />
             </form>
+            <h3> Check Result: </h3>
+            <h3 id="check-result"> </h3>
         </div>
         <div class="column"></div>
     </div>
