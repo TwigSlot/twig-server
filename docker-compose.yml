@@ -2,6 +2,8 @@ networks:
   internal:
 services:
   server:
+    depends_on:
+      - neo4j
     build:
       dockerfile: ./containers/flask/Dockerfile
       context: .
@@ -13,11 +15,13 @@ services:
     ports:
       - "5000:5000"
   neo4j:
-    image: neo4j:latest
+    image: neo4j:4.4.9
     ports:
       - "7474:7474"
       - "7473:7473"
       - "7687:7687"
+    env_file:
+      - .env
     networks:
       - internal
   kratos-migrate:
