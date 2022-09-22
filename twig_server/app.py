@@ -61,7 +61,9 @@ app.add_url_rule("/user/<kratos_user_id>",
 app.add_url_rule("/explore",
                  methods=["GET"], view_func=project.explore)
 app.add_url_rule('/admin',
-                 methods=["GET"], view_func=keto.list_users)
+                 methods=["GET"], view_func=keto.list_relations)
+app.add_url_rule('/admin/check',
+                 methods=["POST"], view_func=keto.check_relation)
 
 def create_app(test_config=None):
     if test_config is not None:

@@ -1,41 +1,94 @@
 <html>
-    <head>
-        <title>Admin</title>
-    </head>
-    <body>
-        <table>
-            <tr>
-                <th>Namespace</th>
-                <th>Object</th>
-                <th>Relation</th>
-                <th>Subject</th>
-            </tr>
-            {% for row in ret['relation_tuples'] %}
-            <tr>
-                <td>{{row['namespace']}}</td>
-                <td>{{row['object']}}</td>
-                <td>{{row['relation']}}</td>
-                <td>{{row['subject_id']}}</td>
-            </tr>
-            {% endfor %}
-        </table>
-        <h1>
-            {{ ret['next_page_token'] }}
-        </h1>
-    </body>
-    <style>
-        table {
-          border-collapse: collapse;
-          width: 100%;
-        }
-        
-        th, td {
-          text-align: left;
-          padding: 8px;
-        }
-        
-        tr:nth-child(even) {
-          background-color: #D6EEEE;
-        }
-    </style>
+
+<head>
+    <title>Admin</title>
+</head>
+
+<body>
+    <table>
+        <tr>
+            <th>Namespace</th>
+            <th>Object</th>
+            <th>Relation</th>
+            <th>Subject</th>
+        </tr>
+        {% for row in ret['relation_tuples'] %}
+        <tr>
+            <td>{{row['namespace']}}</td>
+            <td>{{row['object']}}</td>
+            <td>{{row['relation']}}</td>
+            <td>{{row['subject_id']}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <h1>
+        {{ ret['next_page_token'] }}
+    </h1>
+    <h1>
+        {{ check_status }}
+    </h1>
+    <form action="/admin/check" method="POST">
+        <label for="namespace">Namespace: </label>
+        <input type="text" id="namespace" name="namespace" value="{{ request.form['namespace'] }}" /><br>
+
+        <label for="object">Object: </label>
+        <input type="text" id="object" name="object" value="{{ request.form['object'] }}" /><br>
+
+        <label for="relation">Relation: </label>
+        <input type="text" id="relation" name="relation" value="{{ request.form['relation'] }}" /><br>
+
+        <label for="subject_id">Subject: </label>
+        <input type="text" id="subject_id" name="subject_id" value="{{ request.form['subject_id'] }}" /><br>
+        <input type="submit" value='Check' />
+    </form>
+</body>
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th,
+    td {
+        text-align: left;
+        padding: 8px;
+    }
+
+    tr:nth-child(even) {
+        background-color: #D6EEEE;
+    }
+
+    input[type=text],
+    select {
+        width: 100%;
+        padding: 12px 20px;
+        margin: 8px 0;
+        display: inline-block;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    input[type=submit] {
+        width: 100%;
+        background-color: #4CAF50;
+        color: white;
+        padding: 14px 20px;
+        margin: 8px 0;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    input[type=submit]:hover {
+        background-color: #45a049;
+    }
+
+    div {
+        border-radius: 5px;
+        background-color: #f2f2f2;
+        padding: 20px;
+    }
+</style>
+
 </html>
