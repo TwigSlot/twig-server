@@ -11,6 +11,8 @@ docker-compose up -d neo4j
 docker-compose up logs -f neo4j 
 # after neo4j loaded you can bring up the rest
 docker-compose up -d 
+# double check if server spun up properly without neo4j connection errors
+docker-compose up logs -f server
 ```
 Note that building the images the first time takes longer, but after docker caches some image layers, the waiting time becomes more bearable.
 
@@ -20,7 +22,10 @@ Make sure the following ports are free on your host.
 - `3000` for the login/signup UI, currently from [Ory](https://github.com/ory/kratos-selfservice-ui-node/) but will eventually be replaced
 - `4433` for [Ory Kratos](https://www.ory.sh/kratos/) API, an identity management system
 - `4434` for [Ory Kratos](https://www.ory.sh/kratos/) Admin API, untouched for the most part
+- `4466` for keto read
+- `4467` for keto write
 - `5000` for the TwigSlot Flask API server, where majority of development will take place
+- `5001` for twig research scraping server
 - `7474, 7473, 7687` for a local Neo4J instance (currently unused), though we are currently using Neo4J cloud.
 
 You may use `docker ps` to see the port mappings.
@@ -35,7 +40,15 @@ docker-compose \
     -f docker-compose-debug.yml \
     up -d --build --force-recreate server
 ```
-
+## Keto integration
+for keto integration development
+```shell
+docker-compose \
+    -f docker-compose.yml \
+    -f docker-compose-debug.yml \
+    -f containers/keto/docker-compose.yml \
+    up -d --build --force-recreate server
+```
 ## Errors
 ### Servers inaccessible on Mac OS
 If you're developing on mac, which does not have native docker virtualization support, `http://localhost:3000` and related servers may not be accessible. We will use SSH portforwarding to solve this.
@@ -48,7 +61,9 @@ ssh docker@$(docker-machine ip default) -N -f \
     -L 5001:localhost:5001 \ # for autofill server in twig-research
     -L 4433:localhost:4433 \
     -L 4434:localhost:4434 \
-    -L 4455:localhost:4455
+    -L 4455:localhost:4455 \
+    -L 4466:localhost:4466 \ # for keto read
+    -L 4467:localhost:4467 \ # for keto write
 ```
 A password will be prompted for the virtualbox container, which is `tcuser` by default.
 
