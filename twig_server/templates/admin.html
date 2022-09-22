@@ -8,7 +8,7 @@
             the text field element and an array of possible autocompleted values:*/
             var currentFocus;
             /*execute a function when someone writes in the text field:*/
-            function onInput(obj){
+            function onInput(obj) {
                 var a, b, i, val = obj.value;
                 /*close any already open lists of autocompleted values*/
                 closeAllLists();
@@ -45,8 +45,7 @@
             inp.addEventListener("input", function (e) {
                 onInput(this)
             });
-            inp.addEventListener("focus", async function(e){
-                console.log('focus', e.target)
+            inp.addEventListener("focus", async function (e) {
                 onInput(this)
             })
             /*execute a function presses a key on the keyboard:*/
@@ -102,12 +101,11 @@
             }
             /*execute a function when someone clicks in the document:*/
             document.addEventListener("click", function (e) {
-                console.log('click', e.target)
                 try {
                     x = (Array.from(e.target.parentNode.classList))
-                    if(x.indexOf('autocomplete') == -1)
+                    if (x.indexOf('autocomplete') == -1)
                         closeAllLists()
-                }catch {
+                } catch {
 
                 }
             });
@@ -120,8 +118,15 @@
             });
             return ans
         }
+        function formatParams(params) {
+            return "?" + Object
+                .keys(params)
+                .map(function (key) {
+                    return key + "=" + encodeURIComponent(params[key])
+                })
+                .join("&")
+        }
         function onload() {
-            console.log('hi')
             autocomplete(document.getElementById('expand-namespace'), get_list('namespace_data'))
             autocomplete(document.getElementById('expand-object'), get_list('object_data'))
             autocomplete(document.getElementById('expand-relation'), get_list('relation_data'))
@@ -130,19 +135,38 @@
             autocomplete(document.getElementById('check-object'), get_list('object_data'))
             autocomplete(document.getElementById('check-relation'), get_list('relation_data'))
             autocomplete(document.getElementById('check-subject_id'), get_list('subject_data'))
-            document.getElementById('expand-form').addEventListener('submit', function(e){
+            document.getElementById('expand-form').addEventListener('submit', function (e) {
                 e.preventDefault()
                 var xhttp = new XMLHttpRequest();
-                xhttp.onreadystatechange = function(){
-                    if(this.readyState == 4 && this.status == 200){
+                xhttp.onreadystatechange = function () {
+                    if (this.readyState == 4 && this.status == 200) {
                         document.getElementById('expand-result').innerHTML = xhttp.responseText
                     }
                 }
-                xhttp.open("GET", `${window.location.href}/expand`, true)
+
+                xhttp.open("GET", `${window.location.href}/expand` + formatParams({
+                    'namespace': document.getElementById('expand-namespace').value,
+                    'object': document.getElementById('expand-object').value,
+                    'relation': document.getElementById('expand-relation').value,
+                    'max-depth': document.getElementById('expand-max-depth').value,
+                }), true);
                 xhttp.send();
             })
-            document.getElementById('check-form').addEventListener('submit', function(e){
+            document.getElementById('check-form').addEventListener('submit', function (e) {
                 e.preventDefault()
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (this.readyState == 4 && this.status == 200) {
+                        document.getElementById('check-result').innerHTML = xhttp.responseText
+                    }
+                }
+                xhttp.open("GET", `${window.location.href}/check` + formatParams({
+                    'namespace': document.getElementById('check-namespace').value,
+                    'object': document.getElementById('check-object').value,
+                    'relation': document.getElementById('check-relation').value,
+                    'subject_id': document.getElementById('check-subject_id').value,
+                }), true)
+                xhttp.send();
             })
         }
     </script>
@@ -199,8 +223,10 @@
                 </div><br>
                 <input type="submit" value='Expand' />
             </form>
-            <h3> Expand Result: </h3>
-            <h3 id="expand-result"> </h3>
+            <div class="result">
+                <h3> Expand Result: </h3>
+                <h3 id="expand-result"> </h3>
+            </div>
         </div>
 
         <div class="column">
@@ -226,8 +252,10 @@
                 </div><br>
                 <input type="submit" value='Check' />
             </form>
-            <h3> Check Result: </h3>
-            <h3 id="check-result"> </h3>
+            <div class="result">
+                <h3> Check Result: </h3>
+                <h3 id="check-result"> </h3>
+            </div>
         </div>
         <div class="column"></div>
     </div>
@@ -330,6 +358,10 @@
     .column {
         float: left;
         width: 33.33%;
+    }
+
+    div.result {
+        overflow-x: auto;
     }
 
     /* Clear floats after the columns */

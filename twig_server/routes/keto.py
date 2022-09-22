@@ -16,29 +16,9 @@ def list_relations():
     return render_template('admin.html', ret = get_all())
 
 def check_relation():
-    namespace = request.form.get('namespace')
-    object = request.form.get('object')
-    relation = request.form.get('relation')
-    subject_id = request.form.get('subject_id')
-    data = {
-        "subject_id": subject_id,
-        "relation": relation,
-        "namespace": namespace,
-        "object": object,
-    }
-    check : Response = requests.get(f"{KETO_READ_URL}/relation-tuples/check", params = data)
+    check : Response = requests.get(f"{KETO_READ_URL}/relation-tuples/check", params = request.args)
     return check.text
 
 def expand():
-    namespace = request.form.get('namespace')
-    object = request.form.get('object')
-    relation = request.form.get('relation')
-    max_depth = request.form.get('max-depth')
-    data = {
-        "max-depth": max_depth,
-        "relation": relation,
-        "namespace": namespace,
-        "object": object,
-    }
-    expand : Response = requests.get(f"{KETO_READ_URL}/relation-tuples/expand", params = data)
+    expand : Response = requests.get(f"{KETO_READ_URL}/relation-tuples/expand", params = request.args)
     return expand.text
