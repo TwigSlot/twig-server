@@ -22,3 +22,12 @@ def check_relation():
 def expand():
     expand : Response = requests.get(f"{KETO_READ_URL}/relation-tuples/expand", params = request.args)
     return expand.text
+
+def add_relation():
+    add : Response = requests.put(f"{KETO_WRITE_URL}/admin/relation-tuples", data = json.dumps(dict(request.args)))
+    app.app.logger.info(add.text)
+    app.app.logger.info(add.status_code)
+    if(add.status_code == 201):
+        return 'ok', 200
+    else:
+        return add.text, 404

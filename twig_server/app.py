@@ -66,6 +66,8 @@ app.add_url_rule('/admin/check',
                  methods=["GET"], view_func=keto.check_relation)
 app.add_url_rule('/admin/expand',
                  methods=["GET"], view_func=keto.expand)
+app.add_url_rule('/admin/add',
+                 methods=["POST"], view_func=keto.add_relation)
 
 def create_app(test_config=None):
     if test_config is not None:

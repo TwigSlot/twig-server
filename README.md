@@ -8,11 +8,11 @@ cp .env.example .env
 # make sure neo4j fully loaded before loading the rest, 
 # otherwise service "server" complains
 docker-compose up -d neo4j 
-docker-compose up logs -f neo4j 
+docker-compose logs -f neo4j 
 # after neo4j loaded you can bring up the rest
 docker-compose up -d 
 # double check if server spun up properly without neo4j connection errors
-docker-compose up logs -f server
+docker-compose logs -f server
 ```
 Note that building the images the first time takes longer, but after docker caches some image layers, the waiting time becomes more bearable.
 
@@ -38,7 +38,7 @@ In order to debug the Flask api server (`./server.py`) within the docker contain
 docker-compose \
     -f docker-compose.yml \
     -f docker-compose-debug.yml \
-    up -d --build --force-recreate server
+    up -d --force-recreate server
 ```
 ## Keto integration
 for keto integration development
@@ -47,7 +47,7 @@ docker-compose \
     -f docker-compose.yml \
     -f docker-compose-debug.yml \
     -f containers/keto/docker-compose.yml \
-    up -d --build --force-recreate server
+    up -d --force-recreate keto keto-init
 ```
 ## Errors
 ### Servers inaccessible on Mac OS

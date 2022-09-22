@@ -113,8 +113,8 @@
         function get_list(class_name) {
             var ans = [];
             Array.from(document.getElementsByClassName(class_name)).forEach(element => {
-                if (ans.indexOf(element.innerHTML) == -1)
-                    ans.push(element.innerHTML)
+                if (ans.indexOf(element.innerText) == -1)
+                    ans.push(element.innerText)
             });
             return ans
         }
@@ -131,16 +131,12 @@
             autocomplete(document.getElementById('expand-object'), get_list('object_data'))
             autocomplete(document.getElementById('expand-relation'), get_list('relation_data'))
             autocomplete(document.getElementById('expand-max-depth'), [])
-            autocomplete(document.getElementById('check-namespace'), get_list('namespace_data'))
-            autocomplete(document.getElementById('check-object'), get_list('object_data'))
-            autocomplete(document.getElementById('check-relation'), get_list('relation_data'))
-            autocomplete(document.getElementById('check-subject_id'), get_list('subject_data'))
             document.getElementById('expand-form').addEventListener('submit', function (e) {
                 e.preventDefault()
                 var xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
-                        document.getElementById('expand-result').innerHTML = xhttp.responseText
+                        document.getElementById('expand-result').innerText = xhttp.responseText
                     }
                 }
 
@@ -152,12 +148,16 @@
                 }), true);
                 xhttp.send();
             })
+            autocomplete(document.getElementById('check-namespace'), get_list('namespace_data'))
+            autocomplete(document.getElementById('check-object'), get_list('object_data'))
+            autocomplete(document.getElementById('check-relation'), get_list('relation_data'))
+            autocomplete(document.getElementById('check-subject_id'), get_list('subject_data'))
             document.getElementById('check-form').addEventListener('submit', function (e) {
                 e.preventDefault()
                 var xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
-                        document.getElementById('check-result').innerHTML = xhttp.responseText
+                        document.getElementById('check-result').innerText = xhttp.responseText
                     }
                 }
                 xhttp.open("GET", `${window.location.href}/check` + formatParams({
@@ -165,6 +165,28 @@
                     'object': document.getElementById('check-object').value,
                     'relation': document.getElementById('check-relation').value,
                     'subject_id': document.getElementById('check-subject_id').value,
+                }), true)
+                xhttp.send();
+            })
+            autocomplete(document.getElementById('add-namespace'), get_list('namespace_data'))
+            autocomplete(document.getElementById('add-object'), get_list('object_data'))
+            autocomplete(document.getElementById('add-relation'), get_list('relation_data'))
+            autocomplete(document.getElementById('add-subject_id'), get_list('subject_data'))
+            document.getElementById('add-form').addEventListener('submit', function(e) {
+                e.preventDefault()
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (this.readyState == 4 && this.status == 200) {
+                        window.location.reload()
+                    }else{
+                        document.getElementById('add-result').innerText = xhttp.responseText
+                    }
+                }
+                xhttp.open("POST", `${window.location.href}/add` + formatParams({
+                    'namespace': document.getElementById('add-namespace').value,
+                    'object': document.getElementById('add-object').value,
+                    'relation': document.getElementById('add-relation').value,
+                    'subject_id': document.getElementById('add-subject_id').value,
                 }), true)
                 xhttp.send();
             })
@@ -257,7 +279,32 @@
                 <h3 id="check-result"> </h3>
             </div>
         </div>
-        <div class="column"></div>
+        <div class="column">
+            <form id="add-form" autocomplete="off">
+                <label for="add-namespace">Namespace: </label>
+                <div class="autocomplete">
+                    <input type="text" id="add-namespace" name="namespace" />
+                </div><br>
+
+                <label for="add-object">Object: </label>
+                <div class="autocomplete">
+                    <input type="text" id="add-object" name="object" />
+                </div><br>
+
+                <label for="add-relation">Relation: </label>
+                <div class="autocomplete">
+                    <input type="text" id="add-relation" name="relation" />
+                </div><br>
+
+                <label for="add-subject_id">Subject: </label>
+                <div class="autocomplete">
+                    <input type="text" id="add-subject_id" name="subject_id" />
+                </div><br>
+                <input type="submit" value='Add Relation' />
+            </form>
+            <h3>Add Result: </h3>
+            <h3 id="add-result"> </h3>
+        </div>
     </div>
 
 </body>
