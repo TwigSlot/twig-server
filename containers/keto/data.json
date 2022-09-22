@@ -2,5 +2,9 @@
   "namespace": "videos",
   "object": "/cats",
   "relation": "owner",
-  "subject_id": "tch"
+  "subject_set": {
+    "namespace": "videos",
+    "relation": "y",
+    "object": "z"
+  }
 }

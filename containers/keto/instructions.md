@@ -26,3 +26,7 @@ to pretty print json,
 echo '{"a": {"b": "c"}}' | python -m json.tool
 ```
 be careful about the keto version, the documentation (0.9.0) uses different URL endpoints
+
+```shell
+alias keto='docker run --network twig-server_internal -e KETO_READ_REMOTE="keto:4466" -e KETO_WRITE_REMOTE="keto:4467" oryd/keto:v0.9.0'
+```
