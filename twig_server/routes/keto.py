@@ -31,9 +31,12 @@ def expand():
 
 def add_relation():
     try:
-        add : Response = requests.put(f"{KETO_WRITE_URL}/admin/relation-tuples", data = json.dumps(dict(request.args)))
-        app.app.logger.info(add.text)
-        app.app.logger.info(add.status_code)
+        jsonData = (json.loads(request.data))
+        app.app.logger.info(jsonData)
+        if('subject_set' in jsonData):
+            jsonData['subject_set'] = json.loads(jsonData['subject_set'])
+        add : Response = requests.put(f"{KETO_WRITE_URL}/admin/relation-tuples", 
+                data = json.dumps(jsonData))
     except Exception as e:
         return str(e), 404
     if(add.status_code == 201):

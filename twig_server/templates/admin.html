@@ -154,6 +154,9 @@
             autocomplete(document.getElementById('check-object'), get_list('object_data'))
             autocomplete(document.getElementById('check-relation'), get_list('relation_data'))
             autocomplete(document.getElementById('check-subject_id'), get_list('subject_data'))
+            autocomplete(document.getElementById('check-subject_set_namespace'), get_list('namespace_data'))
+            autocomplete(document.getElementById('check-subject_set_relation'), get_list('relation_data'))
+            autocomplete(document.getElementById('check-subject_set_object'), get_list('object_data'))
             document.getElementById('check-form').addEventListener('submit', function (e) {
                 e.preventDefault()
                 var xhttp = new XMLHttpRequest();
@@ -164,18 +167,29 @@
                         document.getElementById('check-result').innerText = xhttp.responseText
                     }
                 }
-                xhttp.open("GET", `${window.location.href}/check` + formatParams({
+                var params = {
                     'namespace': document.getElementById('check-namespace').value,
                     'object': document.getElementById('check-object').value,
                     'relation': document.getElementById('check-relation').value,
-                    'subject_id': document.getElementById('check-subject_id').value,
-                }), true)
+                    'max-depth': document.getElementById('check-max-depth').value
+                }
+                if(document.getElementById('check-subject-choice').checked){
+                    params['subject_set.namespace'] = document.getElementById('check-subject_set_namespace').value
+                    params['subject_set.relation'] = document.getElementById('check-subject_set_relation').value
+                    params['subject_set.object'] = document.getElementById('check-subject_set_object').value
+                }else{
+                    params['subject_id'] = document.getElementById('check-subject_id').value
+                }
+                xhttp.open("GET", `${window.location.href}/check` + formatParams(params), true)
                 xhttp.send();
             })
             autocomplete(document.getElementById('add-namespace'), get_list('namespace_data'))
             autocomplete(document.getElementById('add-object'), get_list('object_data'))
             autocomplete(document.getElementById('add-relation'), get_list('relation_data'))
             autocomplete(document.getElementById('add-subject_id'), get_list('subject_data'))
+            autocomplete(document.getElementById('add-subject_set_namespace'), get_list('namespace_data'))
+            autocomplete(document.getElementById('add-subject_set_relation'), get_list('relation_data'))
+            autocomplete(document.getElementById('add-subject_set_object'), get_list('object_data'))
             document.getElementById('add-form').addEventListener('submit', function (e) {
                 e.preventDefault()
                 var xhttp = new XMLHttpRequest();
@@ -186,13 +200,23 @@
                         document.getElementById('add-result').innerText = xhttp.responseText
                     }
                 }
-                xhttp.open("POST", `${window.location.href}/add` + formatParams({
+                var params = {
                     'namespace': document.getElementById('add-namespace').value,
                     'object': document.getElementById('add-object').value,
                     'relation': document.getElementById('add-relation').value,
-                    'subject_id': document.getElementById('add-subject_id').value,
-                }), true)
-                xhttp.send();
+                }
+                if(document.getElementById('add-subject-choice').checked){
+                    params['subject_set'] = JSON.stringify({
+                        'namespace': document.getElementById('add-subject_set_namespace').value,
+                        'relation': document.getElementById('add-subject_set_relation').value,
+                        'object': document.getElementById('add-subject_set_object').value,
+                    })
+                }else{
+                    params['subject_id'] = document.getElementById('add-subject_id').value
+                }
+                xhttp.open("POST", `${window.location.href}/add` + formatParams(params), true)
+                xhttp.setRequestHeader("Content-Type", "application/json")
+                xhttp.send(JSON.stringify(params));
             })
             document.getElementById('check-subject-choice').addEventListener('change', function(e){
                 document.getElementById("check-subject-id-div").hidden = e.target.checked
@@ -305,15 +329,19 @@
                     <div class="autocomplete">
                         <input type="text" id="check-subject_set_namespace" />
                     </div><br>
-                    <label for="check-subject_set_relation">Subject Set Relation: </label>
-                    <div class="autocomplete">
-                        <input type="text" id="check-subject_set_relation" />
-                    </div><br>
                     <label for="check-subject_set_object">Subject Set Object: </label>
                     <div class="autocomplete">
                         <input type="text" id="check-subject_set_object" />
                     </div><br>
+                    <label for="check-subject_set_relation">Subject Set Relation: </label>
+                    <div class="autocomplete">
+                        <input type="text" id="check-subject_set_relation" />
+                    </div><br>
                 </div>
+                <label for="check-max-depth">Max-Depth: </label>
+                <div class="autocomplete">
+                    <input type="text" id="check-max-depth" />
+                </div><br>
                 <input type="submit" value='Check' />
             </form>
             <div class="result">
@@ -361,13 +389,13 @@
                     <div class="autocomplete">
                         <input type="text" id="add-subject_set_namespace" />
                     </div><br>
-                    <label for="add-subject_set_relation">Subject Set Relation: </label>
-                    <div class="autocomplete">
-                        <input type="text" id="add-subject_set_relation" />
-                    </div><br>
                     <label for="add-subject_set_object">Subject Set Object: </label>
                     <div class="autocomplete">
                         <input type="text" id="add-subject_set_object" />
+                    </div><br>
+                    <label for="add-subject_set_relation">Subject Set Relation: </label>
+                    <div class="autocomplete">
+                        <input type="text" id="add-subject_set_relation" />
                     </div><br>
                 </div>
                 <input type="submit" value='Add Relation' />

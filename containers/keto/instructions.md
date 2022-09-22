@@ -15,6 +15,15 @@ curl http://localhost:4466/relation-tuples/check \
     -G
 curl http://localhost:4466/relation-tuples/check -d @containers/keto/data.json
 curl http://localhost:4467/admin/relation-tuples -X PUT -d @containers/keto/data.json
+curl http://localhost:4467/admin/relation-tuples -X PUT \
+    --data-urlencode '{"namespace":"videos", "object":"cats", "subject_id":"hi"} = "" '
+curl http://localhost:4467/admin/relation-tuples -X PUT \
+    --data-urlencode "namespace=videos" \
+    --data-urlencode "object=cats" \
+    --data-urlencode "subject_id=hi" 
+    # --data-urlencode "subject_set.namespace=videos" \
+    # --data-urlencode "subject_set.relation=y" \
+    # --data-urlencode "subject_set.object=z" 
 curl http://127.0.0.1:4466/relation-tuples/expand --data-urlencode "namespace=videos" \
     --data-urlencode "relation=owner" \
     --data-urlencode "object=/cats" \
