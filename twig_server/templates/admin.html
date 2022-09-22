@@ -137,6 +137,8 @@
                 xhttp.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
                         document.getElementById('expand-result').innerText = xhttp.responseText
+                    } else {
+                        document.getElementById('expand-result').innerText = xhttp.responseText
                     }
                 }
 
@@ -158,6 +160,8 @@
                 xhttp.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
                         document.getElementById('check-result').innerText = xhttp.responseText
+                    } else {
+                        document.getElementById('expand-result').innerText = xhttp.responseText
                     }
                 }
                 xhttp.open("GET", `${window.location.href}/check` + formatParams({

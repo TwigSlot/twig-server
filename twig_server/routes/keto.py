@@ -16,17 +16,26 @@ def list_relations():
     return render_template('admin.html', ret = get_all())
 
 def check_relation():
-    check : Response = requests.get(f"{KETO_READ_URL}/relation-tuples/check", params = request.args)
-    return check.text
+    try:
+        check : Response = requests.get(f"{KETO_READ_URL}/relation-tuples/check", params = request.args)
+        return check.text
+    except Exception as e:
+        return str(e), 404
 
 def expand():
-    expand : Response = requests.get(f"{KETO_READ_URL}/relation-tuples/expand", params = request.args)
-    return expand.text
+    try:
+        expand : Response = requests.get(f"{KETO_READ_URL}/relation-tuples/expand", params = request.args)
+        return expand.text
+    except Exception as e:
+        return str(e), 404
 
 def add_relation():
-    add : Response = requests.put(f"{KETO_WRITE_URL}/admin/relation-tuples", data = json.dumps(dict(request.args)))
-    app.app.logger.info(add.text)
-    app.app.logger.info(add.status_code)
+    try:
+        add : Response = requests.put(f"{KETO_WRITE_URL}/admin/relation-tuples", data = json.dumps(dict(request.args)))
+        app.app.logger.info(add.text)
+        app.app.logger.info(add.status_code)
+    except Exception as e:
+        return str(e), 404
     if(add.status_code == 201):
         return 'ok', 200
     else:
