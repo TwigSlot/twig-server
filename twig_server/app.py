@@ -1,6 +1,7 @@
+import time
 from flask import Flask, current_app
 from flask_cors import CORS
-from twig_server.routes import misc, project, resource, user
+from twig_server.routes import misc, project, resource, user, keto
 
 import os
 from dotenv import load_dotenv
@@ -59,6 +60,8 @@ app.add_url_rule("/user/<kratos_user_id>",
                  methods=["PUT"], view_func=user.new_user)
 app.add_url_rule("/explore",
                  methods=["GET"], view_func=project.explore)
+app.add_url_rule('/admin',
+                 methods=["GET"], view_func=keto.list_users)
 
 def create_app(test_config=None):
     if test_config is not None:
