@@ -3,7 +3,39 @@
         <title>Admin</title>
     </head>
     <body>
-        <ul>
-	</ul>
+        <table>
+            <tr>
+                <th>Namespace</th>
+                <th>Object</th>
+                <th>Relation</th>
+                <th>Subject</th>
+            </tr>
+            {% for row in ret['relation_tuples'] %}
+            <tr>
+                <td>{{row['namespace']}}</td>
+                <td>{{row['object']}}</td>
+                <td>{{row['relation']}}</td>
+                <td>{{row['subject_id']}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <h1>
+            {{ ret['next_page_token'] }}
+        </h1>
     </body>
+    <style>
+        table {
+          border-collapse: collapse;
+          width: 100%;
+        }
+        
+        th, td {
+          text-align: left;
+          padding: 8px;
+        }
+        
+        tr:nth-child(even) {
+          background-color: #D6EEEE;
+        }
+    </style>
 </html>

@@ -6,7 +6,7 @@ ssh docker@$(docker-machine ip default) -N -f \
     -L 4466:localhost:4466 \
     -L 4467:localhost:4467
 # password is tcuser
-curl http://localhost:4466/relation-tuples | python -m json.tool
+curl http://localhost:4466/relation-tuples 
 curl http://localhost:4466/relation-tuples/check \
     --data-urlencode "subject_id=cat lady" \
     --data-urlencode "relation=owner" \
