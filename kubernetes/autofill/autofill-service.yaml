@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autofill-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: autofill-pod
+  template:
+    metadata:
+      labels:
+        app: autofill-pod
+    spec:
+      containers:
+      - name: autofill-container
+        image: tch1001/autofill_server:latest
+        ports:
+        - containerPort: 5000
+        env:
+          - name: MONGO_URL
+            valueFrom:
+              secretKeyRef:
+                name: autofill-secret
+                key: MONGO_URL
+                optional: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: autofill-service
+spec:
+  selector:
+    app: autofill-pod
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+      nodePort: 31001
+  type: LoadBalancer

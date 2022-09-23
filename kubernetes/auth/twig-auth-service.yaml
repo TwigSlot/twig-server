@@ -34,13 +34,12 @@ metadata:
 spec:
   selector:
     app: selfservice-pod
-  # type: LoadBalancer
   ports:
     - protocol: TCP
       port: 4455
       targetPort: 3000
-      # nodePort: 30000
-      name: http
+      nodePort: 30000
+  type: LoadBalancer
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -90,10 +89,9 @@ metadata:
 spec:
   selector:
     app: kratos-pod
-  # type: LoadBalancer
   ports:
     - protocol: TCP
       port: 4433
       targetPort: 4433
-      # nodePort: 30002
-      name: http
+      nodePort: 30006
+  type: LoadBalancer
