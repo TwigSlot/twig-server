@@ -29,21 +29,21 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`twig.tchlabs.net`) && PathPrefix(`/auth`)
+    - match: Host(`twigslot.com`) && PathPrefix(`/auth`)
       kind: Rule
       middlewares:
         - name: middleware-stripprefix
       services:
         - name: selfservice-service
           port: 4455
-    - match: Host(`twig.tchlabs.net`) && PathPrefix(`/kratos`)
+    - match: Host(`twigslot.com`) && PathPrefix(`/kratos`)
       kind: Rule
       middlewares:
         - name: middleware-stripprefix
       services:
         - name: kratos-service
           port: 4433
-    - match: Host(`twig.tchlabs.net`) && PathPrefix(`/api`)
+    - match: Host(`twigslot.com`) && PathPrefix(`/api`)
       kind: Rule
       middlewares:
         - name: middleware-stripprefix
@@ -54,4 +54,4 @@ spec:
   tls:
     certResolver: myresolver
     domains: 
-    - main: twig.tchlabs.net
+    - main: twigslot.com

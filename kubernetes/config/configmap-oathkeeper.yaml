@@ -67,7 +67,7 @@ data:
         "id": "api-public",
         "version": "v0.39.2",
         "match": {
-          "url": "<http|https>://twig.tchlabs.net/<.*>",
+          "url": "<http|https>://twigslot.com/<.*>",
           "methods": [
             "GET",
             "POST",

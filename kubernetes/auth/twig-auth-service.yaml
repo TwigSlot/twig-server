@@ -23,9 +23,9 @@ spec:
         - name: KRATOS_PUBLIC_URL
           value: http://kratos-service:4433/
         - name: KRATOS_BROWSER_URL
-          value: https://twig.tchlabs.net/kratos
+          value: https://twigslot.com/kratos
         - name: BASE_PATH
-          value: https://twig.tchlabs.net/auth
+          value: https://twigslot.com/auth
 ---
 apiVersion: v1
 kind: Service
@@ -60,8 +60,8 @@ spec:
       volumes:
         - name: sqlite-pv-storage
           persistentVolumeClaim:
-            # claimName: twig-pvc
-            claimName: ebs-claim
+            claimName: twig-pvc
+            # claimName: ebs-claim
         - name: configmap-kratos-volume
           configMap:
             name: configmap-kratos
