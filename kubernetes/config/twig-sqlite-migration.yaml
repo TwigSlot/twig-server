@@ -6,8 +6,8 @@ spec:
   volumes:
     - name: sqlite-pv-storage
       persistentVolumeClaim:
-        # claimName: twig-pvc
-        claimName: ebs-claim
+        claimName: twig-pvc
+        # claimName: ebs-claim
     - name: configmap-kratos-volume
       configMap:
         name: configmap-kratos

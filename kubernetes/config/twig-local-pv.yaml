@@ -5,10 +5,20 @@ metadata:
   labels:
     type: local
 spec:
-  storageClassName: manual
+  storageClassName: local-storage
   capacity:
     storage: 1Gi
   accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: "/mnt/data"
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /home/twig
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - twig-server

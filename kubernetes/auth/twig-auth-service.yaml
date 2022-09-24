@@ -23,9 +23,9 @@ spec:
         - name: KRATOS_PUBLIC_URL
           value: http://kratos-service:4433/
         - name: KRATOS_BROWSER_URL
-          value: https://twig.tchlabs.net/kratos
+          value: https://twigslot.com/kratos
         - name: BASE_PATH
-          value: https://twig.tchlabs.net/auth
+          value: https://twigslot.com/auth
 ---
 apiVersion: v1
 kind: Service
@@ -34,13 +34,12 @@ metadata:
 spec:
   selector:
     app: selfservice-pod
-  # type: LoadBalancer
   ports:
     - protocol: TCP
       port: 4455
       targetPort: 3000
-      # nodePort: 30000
-      name: http
+      nodePort: 30000
+  type: LoadBalancer
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -60,8 +59,8 @@ spec:
       volumes:
         - name: sqlite-pv-storage
           persistentVolumeClaim:
-            # claimName: twig-pvc
-            claimName: ebs-claim
+            claimName: twig-pvc
+            # claimName: ebs-claim
         - name: configmap-kratos-volume
           configMap:
             name: configmap-kratos
@@ -90,10 +89,9 @@ metadata:
 spec:
   selector:
     app: kratos-pod
-  # type: LoadBalancer
   ports:
     - protocol: TCP
       port: 4433
       targetPort: 4433
-      # nodePort: 30002
-      name: http
+      nodePort: 30006
+  type: LoadBalancer

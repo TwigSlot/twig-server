@@ -1,0 +1,19 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: twig-ingress-client
+  namespace: default
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    - match: Host(`twigslot.com`)
+      kind: Rule
+      services:
+        - name: nginx-service
+          port: 80
+  # tls:
+  #   certResolver: myresolver
+  #   domains: 
+  #   - main: twigslot.com

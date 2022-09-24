@@ -27,23 +27,24 @@ metadata:
   namespace: default
 spec:
   entryPoints:
+    - web
     - websecure
   routes:
-    - match: Host(`twig.tchlabs.net`) && PathPrefix(`/auth`)
+    - match: Host(`twigslot.com`) && PathPrefix(`/auth`)
       kind: Rule
       middlewares:
         - name: middleware-stripprefix
       services:
         - name: selfservice-service
           port: 4455
-    - match: Host(`twig.tchlabs.net`) && PathPrefix(`/kratos`)
+    - match: Host(`twigslot.com`) && PathPrefix(`/kratos`)
       kind: Rule
       middlewares:
         - name: middleware-stripprefix
       services:
         - name: kratos-service
           port: 4433
-    - match: Host(`twig.tchlabs.net`) && PathPrefix(`/api`)
+    - match: Host(`twigslot.com`) && PathPrefix(`/api`)
       kind: Rule
       middlewares:
         - name: middleware-stripprefix
@@ -51,7 +52,12 @@ spec:
       services:
         - name: flask-service
           port: 5000
-  tls:
-    certResolver: myresolver
-    domains: 
-    - main: twig.tchlabs.net
+    - match: Path(`/test`)
+      kind: Rule
+      services:
+        - name: flask-service
+          port: 5000
+  # tls:
+  #   certResolver: myresolver
+  #   domains: 
+  #   - main: twigslot.com

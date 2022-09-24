@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: foo
+  namespace: default
+  annotations:
+    # cert-manager.io/cluster-issuer: lets-encrypt
+    cert-manager.io/issuer: letsencrypt-staging
+spec:
+  tls:
+  - hosts:
+    - twigslot.com
+    secretName: twig-ingress-tls
+spec:
+  rules:
+    - host: twigslot.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: traefik
+                port:
+                  number: 80
