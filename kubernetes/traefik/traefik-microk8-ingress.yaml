@@ -4,14 +4,12 @@ metadata:
   name: foo
   namespace: default
   annotations:
-    # cert-manager.io/cluster-issuer: lets-encrypt
-    cert-manager.io/issuer: letsencrypt-staging
+    cert-manager.io/cluster-issuer: lets-encrypt
 spec:
   tls:
   - hosts:
     - twigslot.com
     secretName: twig-ingress-tls
-spec:
   rules:
     - host: twigslot.com
       http:

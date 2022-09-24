@@ -38,7 +38,7 @@ spec:
     - protocol: TCP
       port: 4455
       targetPort: 3000
-      nodePort: 30000
+      # nodePort: 30000
   type: LoadBalancer
 ---
 apiVersion: apps/v1
@@ -69,7 +69,7 @@ spec:
         image: oryd/kratos:v0.9.0-alpha.2
         ports:
         - containerPort: 4433 # public
-        # - containerPort: 4434 # admin (not in use)
+        - containerPort: 4434 # admin (not in use)
         env:
         - name: DSN
           value: sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
@@ -90,8 +90,13 @@ spec:
   selector:
     app: kratos-pod
   ports:
-    - protocol: TCP
+    - name: public
+      protocol: TCP
       port: 4433
       targetPort: 4433
-      nodePort: 30006
-  type: LoadBalancer
+    - name: admin
+      protocol: TCP
+      port: 4434
+      targetPort: 4434
+      # nodePort: 30006
+  # type: LoadBalancer
