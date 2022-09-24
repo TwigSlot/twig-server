@@ -50,7 +50,7 @@ spec:
         - name: traefik
           image: traefik:v2.8
           args:
-            - --api.insecure
+            # - --api.insecure
             # - --accesslog
             - --entrypoints.web.Address=:80
             # - --entrypoints.web.http.redirections.entryPoint.to=websecure

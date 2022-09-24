@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: flask-container
-        image: tch1001/twig_server:latest
+        image: tch1001/twig_server:v3.0.0
         env: 
           - name: NEO4J_SERVER_URL
             valueFrom:

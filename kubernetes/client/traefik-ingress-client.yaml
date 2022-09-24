@@ -13,7 +13,7 @@ spec:
       services:
         - name: nginx-service
           port: 80
-  tls:
-    certResolver: myresolver
-    domains: 
-    - main: twigslot.com
+  # tls:
+  #   certResolver: myresolver
+  #   domains: 
+  #   - main: twigslot.com

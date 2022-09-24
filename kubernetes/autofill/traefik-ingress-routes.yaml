@@ -24,7 +24,7 @@ spec:
       services:
         - name: autofill-service
           port: 5000
-  tls:
-    certResolver: myresolver
-    domains: 
-    - main: twigslot.com
+  # tls:
+  #   certResolver: myresolver
+  #   domains: 
+  #   - main: twigslot.com
