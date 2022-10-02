@@ -1,7 +1,7 @@
 FROM python:3.9-slim-buster 
 RUN apt-get update
 RUN apt-get install -y python3-pip
-RUN apt-get install libsqlite3-dev
+RUN apt-get install -y libsqlite3-dev
 RUN pip install gunicorn
 RUN pip install poetry
 COPY poetry.lock pyproject.toml /app/
