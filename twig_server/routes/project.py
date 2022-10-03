@@ -11,14 +11,19 @@ import twig_server.app as app
 def explore():
     projects = Project.explore_projects(current_app.config['driver'].conn)
     ret: list = []
+    owners = {}
     for x in projects:
         owner = Node.extract_properties(x.get(x._Record__keys[0]))['kratos_user_id']
+        if(owner in owners): continue
         owner_user = User(current_app.config['driver'], kratos_user_id=owner)
         owner_user.query_kratos_user_id()
+        owners[owner] = owner_user
+    for x in projects:
+        owner = Node.extract_properties(x.get(x._Record__keys[0]))['kratos_user_id']
         col = x.get(x._Record__keys[1])
         if(type(col) is graph.Node):
             # is a node
-            ret.append({'project':Node.extract_properties(col), 'owner':owner_user.properties})
+            ret.append({'project':Node.extract_properties(col), 'owner':owners[owner].properties})
     return jsonify({'projects':ret}), 200
 
 def new_project():
