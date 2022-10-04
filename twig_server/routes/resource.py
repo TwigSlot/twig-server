@@ -113,3 +113,20 @@ def edit_relationship(project_id: str, relationship_id: str):
     # not of great importance now
     return 'not implemented yet', 404
 
+def add_tag(project_id: str, resource_id: str):
+    project_uid = int(project_id)
+    assert project_uid is not None
+    project = Project(current_app.config["driver"], uid = project_uid)
+    project.query_uid()
+    assert project.db_obj is not None
+
+    kratos_user_id = request.headers.get('X-User')
+    owner = project.get_owner()
+    if(kratos_user_id != owner['kratos_user_id']):
+        return "not authorized", 401
+
+    resource_uid = int(resource_id)
+    resource = Resource(current_app.config["driver"], uid=resource_uid)
+    res = resource.query_uid()
+    if(resource.get_project().properties['uid'] != project_uid):
+        return "resource not in project", 401

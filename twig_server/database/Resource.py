@@ -1,5 +1,6 @@
 from typing import Any, List, Optional
 from twig_server.database.Project import Project
+from twig_server.database.Tag import Tag
 from twig_server.database.connection import Neo4jConnection
 from twig_server.database.native import Node, Relationship
 
@@ -43,6 +44,18 @@ class Resource(Node):
         self.project_rls_db_obj = self.project_rls.create(Resource._label_project_relationship)
         self.project_rls.sync_properties()
         return self.project_rls_db_obj
+
+    def add_tag(self, tag: Tag) -> Optional[Relationship]:
+        assert tag is not None
+        resource_id = self.properties['uid']
+        tag_id = tag.properties['uid']
+        tag_rls = Relationship(self.conn, a_id = resource_id, b_id = tag_id)
+        tag_rls_db_obj = tag_rls.create(Tag._label_resource_relationship)
+        tag_rls.sync_properties()
+        return tag_rls_db_obj
+
+    def unjoin_tag(self, tag: Tag):
+        pass
 
     def query_uid(self):
         return super().query_uid(Resource._label_name)
