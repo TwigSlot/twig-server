@@ -1,13 +1,14 @@
 from twig_server.database.connection import Neo4jConnection, Neo4jDriver
 from twig_server.database.native import Node, Relationship
-from twig_server.database.User import User
+from twig_server.database.Project import Project
 from typing import Any, List, Optional
 from neo4j import Record
+import twig_server.app as app
 
 
 class Tag(Node):
     _label_name = "Tag"
-    _label_owner_relationship = "Tag_Owner"
+    _label_project_relationship = "Project_Tag"
     _label_resource_relationship = "Resource_Tag"
 
     def __init__(
@@ -21,63 +22,65 @@ class Tag(Node):
         :Keyword Arguments:
             * uid: `str` -- Neo4J Unique ID
             * name: `str` -- Name of Tag
-            * owner: `User` -- Owner of Tag
+            * project: `Project` -- Project which Tag belongs to
         """
         uid: Optional[int] = kwargs.get("uid", None)
         name = kwargs.get("name", "Empty Tag")
-        owner = kwargs.get("owner", None)
+        project = kwargs.get("project", None)
         super().__init__(conn, uid)
         self.name: str = name
         self.description: str = "default tag description"
-        self.owner: Optional[User] = owner
-        self.owner_rls: Optional[Relationship] = None
+        self.project: Optional[Project] = project
+        self.project_rls: Optional[Relationship] = None
 
-    def get_owner(self) -> Optional[User]:
+    def get_project(self) -> Optional[Project]:
         queryStr = \
-            f"MATCH (n:{User._label_name})\
-                -[e:{Tag._label_owner_relationship}]->\
+            f"MATCH (n:{Project._label_name})\
+                -[e:{Tag._label_project_relationship}]->\
                     (m:{Tag._label_name})\
             WHERE id(m)=$uid\
             RETURN n"
         with self.db_conn.session() as session:
             res = session.run(queryStr, {'uid': self.properties['uid']})
             one_res = res.single()
-            user = Node.extract_properties(one_res.get(one_res._Record__keys[0]))
-        return user
+            project = Node.extract_properties(one_res.get(one_res._Record__keys[0]))
+        return project
 
-    def set_owner(self, owner: User) -> Optional[Relationship]:
-        assert owner is not None
-        self.owner = owner
-        owner_id = owner.properties["uid"]
-        proj_id = self.properties["uid"]
-        self.owner_rls = Relationship(self.conn, a_id=owner_id, b_id=proj_id)
-        self.owner_rls_db_obj = self.owner_rls.create(
-            Tag._label_owner_relationship
+    def set_project(self, project: Project) -> Optional[Relationship]:
+        assert project is not None
+        self.project = project
+        project_id = project.properties["uid"]
+        tag_id = self.properties["uid"]
+        self.project_rls = Relationship(self.conn, a_id=project_id, b_id=tag_id)
+        self.project_rls_db_obj = self.project_rls.create(
+            Tag._label_project_relationship
         )
-        self.owner_rls.sync_properties()
-        return self.owner_rls_db_obj
+        self.project_rls.sync_properties()
+        return self.project_rls_db_obj
 
-    def create(self, owner: User) -> Record:
+    def create(self, project: Project) -> Record:
         self.db_obj = super().create(Tag._label_name)
+        app.app.logger.info('setting name')
+        app.app.logger.info(self.name)
         self.set("name", self.name)
         self.set("description", self.description)
         self.sync_properties()
-        self.set_owner(owner)
+        self.set_project(project)
         return self.db_obj
 
     @classmethod
-    def list_tags(cls, db_conn: Neo4jDriver, user: User) -> List[Record]:
+    def list_tags(cls, db_conn: Neo4jDriver, project: Project) -> List[Record]:
         """
-        list tags associated with user
+        list tags associated with project
         """
         queryStr = \
-            f"MATCH (n:{User._label_name})\
-                    -[e:{Tag._label_owner_relationship}]->\
+            f"MATCH (n:{Project._label_name})\
+                    -[e:{Tag._label_project_relationship}]->\
                     (m:{Tag._label_name}) \
               WHERE id(n)=$uid \
               RETURN n,e,m"
         res_list = []
         with db_conn.session() as session:
-            res = session.run(queryStr, { 'uid': user.properties['uid'] })
+            res = session.run(queryStr, { 'uid': project.properties['uid'] })
             res_list = [x for x in res]
         return res_list
