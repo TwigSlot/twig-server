@@ -45,7 +45,7 @@ If you run docker on mac using `eval $(docker-machine env default)`, the network
 ssh docker@$(docker-machine ip default) -N -f \
     -L 3000:localhost:3000 \
     -L 5000:localhost:5000 \
-    -L 5001:localhost:5001 \ # for autofill server in twig-research
+    -L 5001:localhost:5001 \
     -L 4433:localhost:4433 \
     -L 4434:localhost:4434 \
     -L 4455:localhost:4455
