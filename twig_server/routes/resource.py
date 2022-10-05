@@ -1,3 +1,4 @@
+import resource
 from flask import jsonify, current_app, request
 from twig_server.database.Project import Project
 from twig_server.database.Tag import Tag
@@ -107,11 +108,29 @@ def edit_relationship(project_id: str, relationship_id: str):
 def add_tag(project_id: str, resource_id: str):
     project = helper_get_project(project_id)
     resource = helper_get_resource(resource_id)
+
+    tag_id = request.args.get("tag_uid")
+    try:
+        assert tag_id is not None
+        tag_uid = int(tag_id)
+    except:
+        return "tag_uid is not an int", 404
+    tag = Tag(current_app.config["driver"], uid= tag_uid)
+    tag.query_uid()
+    assert tag.db_obj is not None
+
     if(not authorize_user(project)):
         return "not authorized", 401
 
     if(int(resource.get_project().properties['uid']) != int(project_id)):
         return "resource not in project", 401
+    
+    resource_uid = int(resource_id)
+
+    rls = Relationship(current_app.config['driver'], a_id=resource_uid, b_id=tag_uid)
+    rls.create(Tag._label_resource_relationship)
+    return jsonify(tag.properties)
+    
 
 def create_tag(project_id: str):
     project = helper_get_project(project_id)
@@ -123,9 +142,20 @@ def create_tag(project_id: str):
     tag.create(project)
     return jsonify(tag.properties)
 
-def list_tags(project_id: str):
+def list_tags(project_id: str, resource_id: str):
+    resource = helper_get_resource(resource_id)
+    tags = Resource.list_resource_tags(current_app.config["driver"].conn, resource)
+    ret = []
+    for x in tags:
+        col = x.get(x._Record__keys[2])
+        assert type(col) is graph.Node
+        ret.append(Node.extract_properties(col))    
+    return jsonify(ret)
+
+
+def list_all_tags(project_id: str):
     project = helper_get_project(project_id)
-    tags = Tag.list_tags(current_app.config["driver"].conn, project)
+    tags = Tag.list_project_tags(current_app.config["driver"].conn, project)
     ret = []
     for x in tags:
         col = x.get(x._Record__keys[2])

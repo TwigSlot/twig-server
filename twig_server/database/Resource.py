@@ -109,7 +109,22 @@ class Resource(Node):
             res = session.run(queryStr, {'uid': project.properties['uid']})
             res_list = [x for x in res]
         return res_list
-
+    @classmethod
+    def list_resource_tags(cls, db_conn: Neo4jDriver, resource: Any) -> List[Record]:
+        """
+        list tags associated with project
+        """
+        queryStr = \
+            f"MATCH (n:{Resource._label_name})\
+                    -[e:{Tag._label_resource_relationship}]->\
+                    (m:{Tag._label_name}) \
+              WHERE id(n)=$uid \
+              RETURN n,e,m"
+        res_list = []
+        with db_conn.session() as session:
+            res = session.run(queryStr, { 'uid': resource.properties['uid'] })
+            res_list = [x for x in res]
+        return res_list
     def get_project(self) -> Project:
         queryStr = \
             f"MATCH (n:{Project._label_name})\

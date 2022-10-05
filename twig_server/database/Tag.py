@@ -67,9 +67,9 @@ class Tag(Node):
         self.sync_properties()
         self.set_project(project)
         return self.db_obj
-
+    
     @classmethod
-    def list_tags(cls, db_conn: Neo4jDriver, project: Project) -> List[Record]:
+    def list_project_tags(cls, db_conn: Neo4jDriver, project: Project) -> List[Record]:
         """
         list tags associated with project
         """
