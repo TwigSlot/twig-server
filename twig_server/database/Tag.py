@@ -33,7 +33,7 @@ class Tag(Node):
         self.project: Optional[Project] = project
         self.project_rls: Optional[Relationship] = None
 
-    def get_project(self) -> Optional[Project]:
+    def get_project_properties(self) -> Optional[Project]:
         queryStr = \
             f"MATCH (n:{Project._label_name})\
                 -[e:{Tag._label_project_relationship}]->\
@@ -43,8 +43,8 @@ class Tag(Node):
         with self.db_conn.session() as session:
             res = session.run(queryStr, {'uid': self.properties['uid']})
             one_res = res.single()
-            project = Node.extract_properties(one_res.get(one_res._Record__keys[0]))
-        return project
+            project_properties = Node.extract_properties(one_res.get(one_res._Record__keys[0]))
+        return project_properties
 
     def set_project(self, project: Project) -> Optional[Relationship]:
         assert project is not None

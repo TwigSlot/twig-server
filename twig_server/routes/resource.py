@@ -22,9 +22,16 @@ def helper_get_resource(resource_id: str):
     resource_uid = int(resource_id)
     assert resource_uid is not None
     resource = Resource(current_app.config["driver"], uid=resource_uid)
-    res = resource.query_uid()
+    resource.query_uid()
     assert resource.db_obj is not None
     return resource
+def helper_get_tag(tag_id: str):
+    tag_uid = int(tag_id)
+    assert tag_uid is not None
+    tag = Tag(current_app.config["driver"], uid = tag_uid)
+    tag.query_uid()
+    assert tag.db_obj is not None
+    return tag
 
 def authorize_user(project: Project):
     kratos_user_id = request.headers.get('X-User')
@@ -32,6 +39,9 @@ def authorize_user(project: Project):
     if(kratos_user_id != owner['kratos_user_id']):
         return False
     return True
+
+def tag_belongs_to_project(tag: Tag, project: Project):
+    return int(tag.get_project_properties()['uid']) == int(project.properties['uid'])
 
 def new_node(project):
     resource = Resource(current_app.config['driver'])
@@ -107,7 +117,6 @@ def edit_relationship(project_id: str, relationship_id: str):
 
 def add_tag(project_id: str, resource_id: str):
     project = helper_get_project(project_id)
-    resource = helper_get_resource(resource_id)
 
     tag_id = request.args.get("tag_uid")
     try:
@@ -115,15 +124,14 @@ def add_tag(project_id: str, resource_id: str):
         tag_uid = int(tag_id)
     except:
         return "tag_uid is not an int", 404
-    tag = Tag(current_app.config["driver"], uid= tag_uid)
+    tag = Tag(current_app.config["driver"], uid = tag_uid)
     tag.query_uid()
-    app.app.logger.info(tag.properties)
     assert tag.db_obj is not None
 
     if(not authorize_user(project)):
         return "not authorized", 401
 
-    if(int(resource.get_project().properties['uid']) != int(project_id)):
+    if(not tag_belongs_to_project(tag, project)):
         return "resource not in project", 401
     
     resource_uid = int(resource_id)
@@ -135,6 +143,19 @@ def add_tag(project_id: str, resource_id: str):
     rls.create(Tag._label_resource_relationship)
     return jsonify(tag.properties)
     
+def update_color(project_id: str, tag_id: str):
+    project = helper_get_project(project_id)
+    tag = helper_get_tag(tag_id)
+    if(not authorize_user(project)):
+        return "not authorized", 401
+    if(not tag_belongs_to_project(tag, project)):
+        return "tag does not belong to project", 401
+    new_color = request.args.get("color")
+    if(new_color is None):
+        return "new color cannot be None", 404
+    tag.set('color', new_color)
+    tag.sync_properties()
+    return jsonify(tag.properties)
 
 def create_tag(project_id: str):
     project = helper_get_project(project_id)
@@ -142,8 +163,12 @@ def create_tag(project_id: str):
         return "not authorized", 401
 
     tag_name = request.args.get("name")
+    tag_color = request.args.get("color")
+    if(tag_color is None):
+        tag_color = "pink"
     tag = Tag(current_app.config["driver"], name=tag_name)
     tag.create(project)
+    tag.set("color", tag_color)
     return jsonify(tag.properties)
 
 def list_tags(project_id: str, resource_id: str):
