@@ -117,6 +117,7 @@ def add_tag(project_id: str, resource_id: str):
         return "tag_uid is not an int", 404
     tag = Tag(current_app.config["driver"], uid= tag_uid)
     tag.query_uid()
+    app.app.logger.info(tag.properties)
     assert tag.db_obj is not None
 
     if(not authorize_user(project)):
@@ -128,6 +129,9 @@ def add_tag(project_id: str, resource_id: str):
     resource_uid = int(resource_id)
 
     rls = Relationship(current_app.config['driver'], a_id=resource_uid, b_id=tag_uid)
+    rls.query_endpoints()
+    if('uid' in rls.properties):
+        return "tag already attached to node", 404
     rls.create(Tag._label_resource_relationship)
     return jsonify(tag.properties)
     
