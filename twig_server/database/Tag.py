@@ -5,7 +5,6 @@ from typing import Any, List, Optional
 from neo4j import Record
 import twig_server.app as app
 
-
 class Tag(Node):
     _label_name = "Tag"
     _label_project_relationship = "Project_Tag"

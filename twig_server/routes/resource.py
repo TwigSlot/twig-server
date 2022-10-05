@@ -157,6 +157,22 @@ def update_color(project_id: str, tag_id: str):
     tag.sync_properties()
     return jsonify(tag.properties)
 
+def get_tagged_resources(project_id: str, tag_id: str):
+    project = helper_get_project(project_id)
+    tag = helper_get_tag(tag_id)
+    if(not authorize_user(project)):
+        return "not authorized", 401
+    if(not tag_belongs_to_project(tag, project)):
+        return "tag does not belong to project", 401
+    resources = Resource.get_tagged_resources(current_app.config["driver"].conn, tag)
+    ret = []
+    for x in resources:
+        app.app.logger.info(x)
+        col = x.get(x._Record__keys[0])
+        assert type(col) is graph.Node
+        ret.append(Node.extract_properties(col))    
+    return jsonify(ret)
+
 def create_tag(project_id: str):
     project = helper_get_project(project_id)
     if(not authorize_user(project)):
