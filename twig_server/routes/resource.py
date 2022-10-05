@@ -156,6 +156,21 @@ def list_tags(project_id: str, resource_id: str):
         ret.append(Node.extract_properties(col))    
     return jsonify(ret)
 
+def dissociate_tag(project_id: str, resource_id: str):
+    tag_id = request.args.get("tag_uid")
+    resource = helper_get_resource(resource_id)
+    try:
+        assert tag_id is not None
+        tag_uid = int(tag_id)
+    except:
+        return "tag_uid is not an int", 404
+    tag = Tag(current_app.config["driver"], uid= tag_uid)
+    rls_properties = resource.find_rls_with(tag)
+    rls = Relationship(current_app.config["driver"], uid = rls_properties['uid'])
+    rls.query_uid()
+    assert rls.db_obj is not None
+    rls.delete()
+    return "deleted", 200
 
 def list_all_tags(project_id: str):
     project = helper_get_project(project_id)

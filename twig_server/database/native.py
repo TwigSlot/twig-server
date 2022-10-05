@@ -143,10 +143,11 @@ class Relationship:
             res: Result = session.run(
                 queryStr, {"a_id": int(self.a_id), "b_id": int(self.b_id)}
             )
-            self.db_obj = self.extract_relationship(res)
+            self.db_obj = Relationship.extract_relationship(res)
             self.sync_properties()
         return self.db_obj
 
+    @classmethod
     def extract_relationship(self, res: Result) -> Optional[Record]:
         row = res.single()
         if row:
@@ -180,14 +181,14 @@ class Relationship:
                                 "a_id": int(self.a_id),
                                 "b_id": int(self.b_id)
                             })
-            self.db_obj = self.extract_relationship(res)
+            self.db_obj = Relationship.extract_relationship(res)
             self.sync_properties()
         return self.db_obj
     def query_uid(self, label_name: Optional[str] = None) -> Optional[Result]:
         queryStr: str = f"MATCH (a)-[n{(':'+label_name) if label_name else ''}]->(b) WHERE id(n)=$uid RETURN n"
         with self.db_conn.session() as session:
             res = session.run(queryStr, {"uid": self.properties["uid"]})
-            self.db_obj = self.extract_relationship(res)
+            self.db_obj = Relationship.extract_relationship(res)
             self.sync_properties()
 
         return self.db_obj
@@ -198,7 +199,7 @@ class Relationship:
         queryStr = f"MATCH (a)-[n]->(b) WHERE id(n)=$uid DELETE n"
         with self.db_conn.session() as session:
             res = session.run(queryStr, {"uid": self.properties["uid"]})
-            self.db_obj = self.extract_relationship(res)
+            self.db_obj = Relationship.extract_relationship(res)
 
             self.sync_properties()
 

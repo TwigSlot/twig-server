@@ -68,7 +68,22 @@ class Resource(Node):
         self.set_project(project)
         return self.db_obj
 
-    
+    def find_rls_with(self, tag: Tag):
+        queryStr = f"MATCH (n:{Resource._label_name})-[e]->(t:{Tag._label_name})"+\
+                   f"WHERE id(n)=$uid AND id(t)=$tag_id RETURN e"
+        rls_db_obj = None
+        with self.db_conn.session() as session:
+            res = session.run(
+                queryStr,
+                {
+                    'uid': self.properties['uid'],
+                    'tag_id': tag.properties['uid']
+                }
+            )
+            rls_db_obj = Relationship.extract_relationship(res)
+        return Relationship.extract_properties(rls_db_obj)
+
+
     @classmethod
     def update_all_positions(cls, db_conn: Neo4jConnection, new_positions: dict, project_id: int) -> None:
         for uid in new_positions:
