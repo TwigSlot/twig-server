@@ -157,6 +157,34 @@ def update_color(project_id: str, tag_id: str):
     tag.sync_properties()
     return jsonify(tag.properties)
 
+def update_priority(project_id: str, tag_id: str):
+    project = helper_get_project(project_id)
+    tag = helper_get_tag(tag_id)
+    if(not authorize_user(project)):
+        return "not authorized", 401
+    if(not tag_belongs_to_project(tag, project)):
+        return "tag does not belong to project", 401
+    new_priority = request.args.get("priority")
+    if(new_priority is None):
+        return "new priority cannot be None", 404
+    tag.set('priority', int(new_priority))
+    tag.sync_properties()
+    return jsonify(tag.properties)
+def update_name(project_id: str, tag_id: str):
+    project = helper_get_project(project_id)
+    tag = helper_get_tag(tag_id)
+    if(not authorize_user(project)):
+        return "not authorized", 401
+    if(not tag_belongs_to_project(tag, project)):
+        return "tag does not belong to project", 401
+    new_name = request.args.get("name")
+    if(new_name is None):
+        return "new name cannot be None", 404
+    tag.set('name', new_name)
+    tag.sync_properties()
+    return jsonify(tag.properties)
+
+
 def get_tagged_resources(project_id: str, tag_id: str):
     project = helper_get_project(project_id)
     tag = helper_get_tag(tag_id)

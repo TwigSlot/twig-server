@@ -57,6 +57,10 @@ app.add_url_rule("/project/<project_id>/tag/<tag_id>/update_color",
                  methods=["POST", "PUT"], view_func=resource.update_color)
 app.add_url_rule("/project/<project_id>/tag/<tag_id>/list_resources",
                  methods=["GET"], view_func=resource.get_tagged_resources)
+app.add_url_rule("/project/<project_id>/tag/<tag_id>/update_name",
+                 methods=["POST", "PUT"], view_func=resource.update_name)
+app.add_url_rule("/project/<project_id>/tag/<tag_id>/update_priority",
+                 methods=["POST", "PUT"], view_func=resource.update_priority)
 app.add_url_rule("/project/<project_id>/list_all_tags",
                  methods=["GET"], view_func=resource.list_all_tags)
 app.add_url_rule("/project/<project_id>/delete_tag",
