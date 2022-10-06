@@ -1,5 +1,6 @@
 from typing import Any, List, Optional
 from twig_server.database.Project import Project
+from twig_server.database.Tag import Tag
 from twig_server.database.connection import Neo4jConnection
 from twig_server.database.native import Node, Relationship
 
@@ -44,6 +45,18 @@ class Resource(Node):
         self.project_rls.sync_properties()
         return self.project_rls_db_obj
 
+    def add_tag(self, tag: Tag) -> Optional[Relationship]:
+        assert tag is not None
+        resource_id = self.properties['uid']
+        tag_id = tag.properties['uid']
+        tag_rls = Relationship(self.conn, a_id = resource_id, b_id = tag_id)
+        tag_rls_db_obj = tag_rls.create(Tag._label_resource_relationship)
+        tag_rls.sync_properties()
+        return tag_rls_db_obj
+
+    def unjoin_tag(self, tag: Tag):
+        pass
+
     def query_uid(self):
         return super().query_uid(Resource._label_name)
 
@@ -55,7 +68,22 @@ class Resource(Node):
         self.set_project(project)
         return self.db_obj
 
-    
+    def find_rls_with(self, tag: Tag):
+        queryStr = f"MATCH (n:{Resource._label_name})-[e]->(t:{Tag._label_name})"+\
+                   f"WHERE id(n)=$uid AND id(t)=$tag_id RETURN e"
+        rls_db_obj = None
+        with self.db_conn.session() as session:
+            res = session.run(
+                queryStr,
+                {
+                    'uid': self.properties['uid'],
+                    'tag_id': tag.properties['uid']
+                }
+            )
+            rls_db_obj = Relationship.extract_relationship(res)
+        return Relationship.extract_properties(rls_db_obj)
+
+
     @classmethod
     def update_all_positions(cls, db_conn: Neo4jConnection, new_positions: dict, project_id: int) -> None:
         for uid in new_positions:
@@ -84,6 +112,21 @@ class Resource(Node):
         return self.db_obj
 
     @classmethod
+    def get_tagged_resources(cls, db_conn: Neo4jDriver, tag: Tag):
+        queryStr = \
+            f"MATCH (n:{Resource._label_name})\
+                -[e:{Tag._label_resource_relationship}]->\
+                    (m:{Tag._label_name})\
+            WHERE id(m)=$uid\
+            RETURN n"
+        res_list = []
+        with db_conn.session() as session:
+            res = session.run(queryStr, { 'uid': tag.properties['uid'] })
+            res_list = [x for x in res]
+        return res_list
+
+
+    @classmethod
     def list_resources(cls, db_conn: Neo4jDriver, project: Project) -> List[Record]:
         queryStr = \
             f"MATCH (n:{Project._label_name})\
@@ -96,7 +139,22 @@ class Resource(Node):
             res = session.run(queryStr, {'uid': project.properties['uid']})
             res_list = [x for x in res]
         return res_list
-
+    @classmethod
+    def list_resource_tags(cls, db_conn: Neo4jDriver, resource: Any) -> List[Record]:
+        """
+        list tags associated with project
+        """
+        queryStr = \
+            f"MATCH (n:{Resource._label_name})\
+                    -[e:{Tag._label_resource_relationship}]->\
+                    (m:{Tag._label_name}) \
+              WHERE id(n)=$uid \
+              RETURN n,e,m"
+        res_list = []
+        with db_conn.session() as session:
+            res = session.run(queryStr, { 'uid': resource.properties['uid'] })
+            res_list = [x for x in res]
+        return res_list
     def get_project(self) -> Project:
         queryStr = \
             f"MATCH (n:{Project._label_name})\
