@@ -32,7 +32,7 @@ In order to debug the Flask api server (`./server.py`) within the docker contain
 ```shell
 docker-compose \
     -f docker-compose.yml \
-    -f docker-compose-debug.yml \
+    -f docker-compose.dev.yml \
     up -d --build --force-recreate server
 ```
 
