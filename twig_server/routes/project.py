@@ -132,7 +132,6 @@ def query_project(project_id: str):
             ans2 = list_relationships(project=project)
             if ans2:
                 ans.extend(ans2)
-        print(request.headers.get('X-User'))
         return (
             jsonify(
                 {
