@@ -92,7 +92,6 @@ def get_tagged_resources(project_id: str, tag_id: str):
     resources = Resource.get_tagged_resources(current_app.config["driver"].conn, tag)
     ret = []
     for x in resources:
-        app.app.logger.info(x)
         col = x.get(x._Record__keys[0])
         assert type(col) is graph.Node
         ret.append(Node.extract_properties(col))    
@@ -110,6 +109,7 @@ def create_tag(project_id: str):
     tag = Tag(current_app.config["driver"], name=tag_name)
     tag.create(project)
     tag.set("color", tag_color)
+    tag.set("priority", 0)
     return jsonify(tag.properties)
 
 def list_tags(project_id: str, resource_id: str):

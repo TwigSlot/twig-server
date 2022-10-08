@@ -61,7 +61,6 @@ def update_user(kratos_user_id: str):
         current_app.config["driver"], kratos_user_id = kratos_user_id
     )
     res = user.query_kratos_user_id()
-    app.app.logger.info(user)
     if res:
         for key in request.args:
             if(key == 'kratos_user_id'):

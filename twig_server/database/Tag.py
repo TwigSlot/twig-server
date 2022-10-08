@@ -59,8 +59,6 @@ class Tag(Node):
 
     def create(self, project: Project) -> Record:
         self.db_obj = super().create(Tag._label_name)
-        app.app.logger.info('setting name')
-        app.app.logger.info(self.name)
         self.set("name", self.name)
         self.set("description", self.description)
         self.sync_properties()
