@@ -85,8 +85,6 @@ def update_name(project_id: str, tag_id: str):
 def get_tagged_resources(project_id: str, tag_id: str):
     project = helper_get_project(project_id)
     tag = helper_get_tag(tag_id)
-    if(not authorize_user(project)):
-        return "not authorized", 401
     if(not tag_belongs_to_project(tag, project)):
         return "tag does not belong to project", 401
     resources = Resource.get_tagged_resources(current_app.config["driver"].conn, tag)
