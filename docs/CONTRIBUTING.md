@@ -35,8 +35,11 @@ We'll now start all the dependencies needed to begin working on the repo.
 docker-compose up -d neo4j kratos oathkeeper mailslurper kratos-selfservice-ui-node
 ```
 
-> Note: If the above command returns something like: `docker-compose not found`,
+> **Note**: If the above command returns something like: `docker-compose not found`,
 > you likely have Compose V2. Replace the `docker-compose` with `docker compose`
+> ```bash
+> docker compose up -d neo4j kratos oathkeeper mailslurper kratos-selfservice-ui-node
+> ```
 
 
 ### Launching the server locally
@@ -46,14 +49,14 @@ We are using poetry to manage project dependencies.
 
 [Please follow their installation guide here](https://python-poetry.org/docs/#installation)
 
-> Note: You might want to configure poetry to create the virtualenvs within the
+> **Note**: You might want to configure poetry to create the virtualenvs within the
 > repo directory itself, not scattered around your home. 
 > `poetry config virtualenvs.in-project true` should do it.
 
 
 Next, create a new Python 3.9 virtualenv with `poetry env use 3.9`
 
-> Warning: If you are using a virtualenv manager like pyenv, you might want to set
+> **Warning**: If you are using a virtualenv manager like pyenv, you might want to set
 > `poetry config virtualenvs.prefer-active-python true` so that you can obtain
 > the right Python version (3.9)
 
