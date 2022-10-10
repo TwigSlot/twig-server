@@ -15,12 +15,12 @@ arm64 (Apple Silicon) based machines.
 
 
 ## Development environment setup
+
 We will assume you have already cloned this repository. If not, do so with
 ```bash
 git clone https://github.com/twigslot/twig-server.git
 ```
 Now, move into the directory containing this repository: `cd twig-server`
-
 
 We'll now need to configure the environment variables. Run the command below, and see if you are happy
 with the defaults (most of you should be).
@@ -38,6 +38,9 @@ docker-compose up -d neo4j kratos oathkeeper mailslurper kratos-selfservice-ui-n
 > Note: If the above command returns something like: `docker-compose not found`,
 > you likely have Compose V2. Replace the `docker-compose` with `docker compose`
 
+
+### Launching the server locally
+
 Once all the dependencies have started, you can now start the server.
 We are using poetry to manage project dependencies.
 
@@ -46,6 +49,13 @@ We are using poetry to manage project dependencies.
 > Note: You might want to configure poetry to create the virtualenvs within the
 > repo directory itself, not scattered around your home. 
 > `poetry config virtualenvs.in-project true` should do it.
+
+
+Next, create a new Python 3.9 virtualenv with `poetry env use 3.9`
+
+> Warning: If you are using a virtualenv manager like pyenv, you might want to set
+> `poetry config virtualenvs.prefer-active-python true` so that you can obtain
+> the right Python version (3.9)
 
 Now,
 ```bash
