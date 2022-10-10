@@ -26,7 +26,7 @@ We'll now need to configure the environment variables. Run the command below, an
 with the defaults (most of you should be).
 
 ```bash
-cp .env.example .env
+cp .env.dev.example .env
 ```
 
 We'll now start all the dependencies needed to begin working on the repo.
