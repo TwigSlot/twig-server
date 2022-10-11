@@ -6,7 +6,6 @@ from twig_server.database.native import Node, Relationship
 
 from neo4j import Record, Neo4jDriver
 
-import twig_server.app as app
 
 class Resource(Node):
     _label_name = "Resource"

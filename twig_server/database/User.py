@@ -4,7 +4,6 @@ from twig_server.database.connection import Neo4jConnection
 
 from neo4j import Record
 
-import twig_server.app as app
 
 class User(Node):
     _label_name: str = "User"
