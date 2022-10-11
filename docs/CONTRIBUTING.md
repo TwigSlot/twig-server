@@ -8,7 +8,7 @@ ensure you have a nice and smooth time.
 ## System requirements
 
 - Docker (please ensure docker compose is present - it should be by default!)
-- Python 3.9.9+ (although older versions should work fine)
+- Python 3.9.9+ (although older versions should work fine, but you're on your own!)
 
 Most CPU architectures should work fine. This has been tested on x86/amd64 systems as well as 
 arm64 (Apple Silicon) based machines.
