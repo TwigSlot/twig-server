@@ -6,7 +6,6 @@ from typing import Any, List, Mapping, Optional
 from twig_server.database.connection import Neo4jConnection
 from neo4j import Neo4jDriver, Result, Record
 
-import twig_server.app as app
 
 class Node:
     def __init__(
