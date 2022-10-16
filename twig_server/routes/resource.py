@@ -11,6 +11,7 @@ from neo4j import graph
 from twig_server.database.native import Node, Relationship
 import twig_server.app as app
 
+
 def helper_get_project(project_id: str):
     project_uid = int(project_id)
     assert project_uid is not None
@@ -18,6 +19,8 @@ def helper_get_project(project_id: str):
     project.query_uid()
     assert project.db_obj is not None
     return project
+
+
 def helper_get_resource(resource_id: str):
     resource_uid = int(resource_id)
     assert resource_uid is not None
@@ -25,56 +28,66 @@ def helper_get_resource(resource_id: str):
     resource.query_uid()
     assert resource.db_obj is not None
     return resource
+
+
 def helper_get_tag(tag_id: str):
     tag_uid = int(tag_id)
     assert tag_uid is not None
-    tag = Tag(current_app.config["driver"], uid = tag_uid)
+    tag = Tag(current_app.config["driver"], uid=tag_uid)
     tag.query_uid()
     assert tag.db_obj is not None
     return tag
 
+
 def authorize_user(project: Project):
-    kratos_user_id = request.headers.get('X-User')
+    kratos_user_id = request.headers.get("X-User")
     owner = project.get_owner()
-    if(kratos_user_id != owner['kratos_user_id']):
+    if kratos_user_id != owner["kratos_user_id"]:
         return False
     return True
 
+
 def tag_belongs_to_project(tag: Tag, project: Project):
-    return int(tag.get_project_properties()['uid']) == int(project.properties['uid'])
+    return int(tag.get_project_properties()["uid"]) == int(
+        project.properties["uid"]
+    )
+
 
 def new_node(project):
-    resource = Resource(current_app.config['driver'])
+    resource = Resource(current_app.config["driver"])
     resource.create(project)
     return jsonify(resource.properties)
 
+
 def new_relationship(project, a_id: str, b_id: str):
-    resource = Relationship(current_app.config['driver'], a_id=a_id, b_id=b_id)
-    resource.create('prereq')
+    resource = Relationship(current_app.config["driver"], a_id=a_id, b_id=b_id)
+    resource.create("prereq")
     return jsonify(resource.properties)
+
 
 def new_item(project_id: str):
     project = helper_get_project(project_id)
 
-    if(not authorize_user(project)):
+    if not authorize_user(project):
         return "not authorized", 401
 
-    if(request.args.get('item') == 'node'):
+    if request.args.get("item") == "node":
         return new_node(project), 200
-    elif(request.args.get('item') == 'relationship'):
-        a_id = request.args.get('a_id')
-        b_id = request.args.get('b_id')
+    elif request.args.get("item") == "relationship":
+        a_id = request.args.get("a_id")
+        b_id = request.args.get("b_id")
         assert a_id is not None
         assert b_id is not None
         return new_relationship(project, a_id, b_id), 200
     else:
         return "item must be set", 404
-    
+
+
 def edit_resource(project_id: str, resource_id: str):
     project = helper_get_project(project_id)
     resource = helper_get_resource(resource_id)
     res = resource.query_uid()
-    if(not authorize_user(project)):
+    if not authorize_user(project):
         return "not authorized", 401
 
     if res is None:
@@ -84,36 +97,40 @@ def edit_resource(project_id: str, resource_id: str):
         resource.set(key, value)
     return jsonify(resource.properties), 200
 
+
 def delete_resource(project_id: str, resource_id: str):
     project = helper_get_project(project_id)
     resource = helper_get_resource(resource_id)
     res = resource.query_uid()
-    if(not authorize_user(project)):
+    if not authorize_user(project):
         return "not authorized", 401
 
-    if(res):
+    if res:
         resource.delete()
-        return jsonify({'success': True}), 200
+        return jsonify({"success": True}), 200
     else:
-        return jsonify({'success': False}), 404
+        return jsonify({"success": False}), 404
+
 
 def delete_relationship(project_id: str, relationship_id: str):
     project = helper_get_project(project_id)
-    if(not authorize_user(project)):
+    if not authorize_user(project):
         return "not authorized", 401
 
-    relationship_uid= int(relationship_id)
+    relationship_uid = int(relationship_id)
     rls = Relationship(current_app.config["driver"], uid=relationship_uid)
     res = rls.query_uid()
     if res is not None:
         rls.delete()
-        return jsonify({'success': True}), 200
+        return jsonify({"success": True}), 200
     else:
-        return jsonify({'success': False}), 404
+        return jsonify({"success": False}), 404
+
 
 def edit_relationship(project_id: str, relationship_id: str):
     # not of great importance now
-    return 'not implemented yet', 404
+    return "not implemented yet", 404
+
 
 def add_tag(project_id: str, resource_id: str):
     project = helper_get_project(project_id)
@@ -124,63 +141,69 @@ def add_tag(project_id: str, resource_id: str):
         tag_uid = int(tag_id)
     except:
         return "tag_uid is not an int", 404
-    tag = Tag(current_app.config["driver"], uid = tag_uid)
+    tag = Tag(current_app.config["driver"], uid=tag_uid)
     tag.query_uid()
     assert tag.db_obj is not None
 
-    if(not authorize_user(project)):
+    if not authorize_user(project):
         return "not authorized", 401
 
-    if(not tag_belongs_to_project(tag, project)):
+    if not tag_belongs_to_project(tag, project):
         return "resource not in project", 401
-    
+
     resource_uid = int(resource_id)
 
-    rls = Relationship(current_app.config['driver'], a_id=resource_uid, b_id=tag_uid)
+    rls = Relationship(
+        current_app.config["driver"], a_id=resource_uid, b_id=tag_uid
+    )
     rls.query_endpoints()
-    if('uid' in rls.properties):
+    if "uid" in rls.properties:
         return "tag already attached to node", 404
     rls.create(Tag._label_resource_relationship)
     return jsonify(tag.properties)
-    
+
+
 def update_color(project_id: str, tag_id: str):
     project = helper_get_project(project_id)
     tag = helper_get_tag(tag_id)
-    if(not authorize_user(project)):
+    if not authorize_user(project):
         return "not authorized", 401
-    if(not tag_belongs_to_project(tag, project)):
+    if not tag_belongs_to_project(tag, project):
         return "tag does not belong to project", 401
     new_color = request.args.get("color")
-    if(new_color is None):
+    if new_color is None:
         return "new color cannot be None", 404
-    tag.set('color', new_color)
+    tag.set("color", new_color)
     tag.sync_properties()
     return jsonify(tag.properties)
+
 
 def update_priority(project_id: str, tag_id: str):
     project = helper_get_project(project_id)
     tag = helper_get_tag(tag_id)
-    if(not authorize_user(project)):
+    if not authorize_user(project):
         return "not authorized", 401
-    if(not tag_belongs_to_project(tag, project)):
+    if not tag_belongs_to_project(tag, project):
         return "tag does not belong to project", 401
     new_priority = request.args.get("priority")
-    if(new_priority is None):
+    if new_priority is None:
         return "new priority cannot be None", 404
-    tag.set('priority', int(new_priority))
+    tag.set("priority", int(new_priority))
     tag.sync_properties()
     return jsonify(tag.properties)
+
+
 def update_name(project_id: str, tag_id: str):
     project = helper_get_project(project_id)
     tag = helper_get_tag(tag_id)
-    if(not authorize_user(project)):
+    if not authorize_user(project):
         return "not authorized", 401
-    if(not tag_belongs_to_project(tag, project)):
+    if not tag_belongs_to_project(tag, project):
         return "tag does not belong to project", 401
     new_name = request.args.get("name")
-    if(new_name is None):
+    if new_name is None:
         return "new name cannot be None", 404
-    tag.set('name', new_name)
+    tag.set("name", new_name)
     tag.sync_properties()
     return jsonify(tag.properties)
 
@@ -188,42 +211,49 @@ def update_name(project_id: str, tag_id: str):
 def get_tagged_resources(project_id: str, tag_id: str):
     project = helper_get_project(project_id)
     tag = helper_get_tag(tag_id)
-    if(not authorize_user(project)):
+    if not authorize_user(project):
         return "not authorized", 401
-    if(not tag_belongs_to_project(tag, project)):
+    if not tag_belongs_to_project(tag, project):
         return "tag does not belong to project", 401
-    resources = Resource.get_tagged_resources(current_app.config["driver"].conn, tag)
+    resources = Resource.get_tagged_resources(
+        current_app.config["driver"].conn, tag
+    )
     ret = []
     for x in resources:
         app.app.logger.info(x)
         col = x.get(x._Record__keys[0])
         assert type(col) is graph.Node
-        ret.append(Node.extract_properties(col))    
+        ret.append(Node.extract_properties(col))
     return jsonify(ret)
+
 
 def create_tag(project_id: str):
     project = helper_get_project(project_id)
-    if(not authorize_user(project)):
+    if not authorize_user(project):
         return "not authorized", 401
 
     tag_name = request.args.get("name")
     tag_color = request.args.get("color")
-    if(tag_color is None):
+    if tag_color is None:
         tag_color = "pink"
     tag = Tag(current_app.config["driver"], name=tag_name)
     tag.create(project)
     tag.set("color", tag_color)
     return jsonify(tag.properties)
 
+
 def list_tags(project_id: str, resource_id: str):
     resource = helper_get_resource(resource_id)
-    tags = Resource.list_resource_tags(current_app.config["driver"].conn, resource)
+    tags = Resource.list_resource_tags(
+        current_app.config["driver"].conn, resource
+    )
     ret = []
     for x in tags:
         col = x.get(x._Record__keys[2])
         assert type(col) is graph.Node
-        ret.append(Node.extract_properties(col))    
+        ret.append(Node.extract_properties(col))
     return jsonify(ret)
+
 
 def dissociate_tag(project_id: str, resource_id: str):
     tag_id = request.args.get("tag_uid")
@@ -233,13 +263,14 @@ def dissociate_tag(project_id: str, resource_id: str):
         tag_uid = int(tag_id)
     except:
         return "tag_uid is not an int", 404
-    tag = Tag(current_app.config["driver"], uid= tag_uid)
+    tag = Tag(current_app.config["driver"], uid=tag_uid)
     rls_properties = resource.find_rls_with(tag)
-    rls = Relationship(current_app.config["driver"], uid = rls_properties['uid'])
+    rls = Relationship(current_app.config["driver"], uid=rls_properties["uid"])
     rls.query_uid()
     assert rls.db_obj is not None
     rls.delete()
     return "deleted", 200
+
 
 def list_all_tags(project_id: str):
     project = helper_get_project(project_id)
@@ -248,17 +279,18 @@ def list_all_tags(project_id: str):
     for x in tags:
         col = x.get(x._Record__keys[2])
         assert type(col) is graph.Node
-        ret.append(Node.extract_properties(col))    
+        ret.append(Node.extract_properties(col))
     return jsonify(ret)
+
 
 def delete_tag(project_id: str):
     project = helper_get_project(project_id)
-    if(not authorize_user(project)):
+    if not authorize_user(project):
         return "not authorized", 401
-    tag_id = request.args.get('uid')
+    tag_id = request.args.get("uid")
     tag = Tag(current_app.config["driver"], uid=tag_id)
     tag_db_obj = tag.query_uid()
-    if(tag_db_obj):
+    if tag_db_obj:
         tag.delete()
         return "ok", 200
     else:

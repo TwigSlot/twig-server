@@ -8,30 +8,42 @@ from neo4j import graph
 
 import twig_server.app as app
 
+
 def explore():
-    projects = Project.explore_projects(current_app.config['driver'].conn)
+    projects = Project.explore_projects(current_app.config["driver"].conn)
     ret: list = []
     owners = {}
     for x in projects:
-        owner = Node.extract_properties(x.get(x._Record__keys[0]))['kratos_user_id']
-        if(owner in owners): continue
-        owner_user = User(current_app.config['driver'], kratos_user_id=owner)
+        owner = Node.extract_properties(x.get(x._Record__keys[0]))[
+            "kratos_user_id"
+        ]
+        if owner in owners:
+            continue
+        owner_user = User(current_app.config["driver"], kratos_user_id=owner)
         owner_user.query_kratos_user_id()
         owners[owner] = owner_user
     for x in projects:
-        owner = Node.extract_properties(x.get(x._Record__keys[0]))['kratos_user_id']
+        owner = Node.extract_properties(x.get(x._Record__keys[0]))[
+            "kratos_user_id"
+        ]
         col = x.get(x._Record__keys[1])
-        if(type(col) is graph.Node):
+        if type(col) is graph.Node:
             # is a node
-            ret.append({'project':Node.extract_properties(col), 'owner':owners[owner].properties})
-    return jsonify({'projects':ret}), 200
+            ret.append(
+                {
+                    "project": Node.extract_properties(col),
+                    "owner": owners[owner].properties,
+                }
+            )
+    return jsonify({"projects": ret}), 200
+
 
 def new_project():
-    kratos_user_id = request.headers.get('X-User')
-    debug = app.app.config['DEBUG']
-    if(kratos_user_id is None and debug): # for dev
-        kratos_user_id = request.args.get("user") 
-    if(kratos_user_id is None):
+    kratos_user_id = request.headers.get("X-User")
+    debug = app.app.config["DEBUG"]
+    if kratos_user_id is None and debug:  # for dev
+        kratos_user_id = request.args.get("user")
+    if kratos_user_id is None:
         return "not authorized", 401
     assert kratos_user_id is not None
     user = User(current_app.config["driver"], kratos_user_id=kratos_user_id)
@@ -39,7 +51,10 @@ def new_project():
     assert user.db_obj is not None
     project = Project(current_app.config["driver"], owner=user)
     project.create(user)
-    return jsonify({'project':project.properties, 'owner': user.properties}), 200
+    return (
+        jsonify({"project": project.properties, "owner": user.properties}),
+        200,
+    )
 
 
 def list_resources(project: Project):
@@ -78,9 +93,9 @@ def edit_project(project_id: str):
     if res is None:
         return "project not found", 404
 
-    kratos_user_id = request.headers.get('X-User')
+    kratos_user_id = request.headers.get("X-User")
     owner = project.get_owner()
-    if(kratos_user_id != owner['kratos_user_id']):
+    if kratos_user_id != owner["kratos_user_id"]:
         return "not authorized", 401
 
     for key in request.args:
@@ -92,9 +107,9 @@ def edit_project(project_id: str):
 def delete_project(project_id: str):
     project = Project(current_app.config["driver"], uid=int(project_id))
 
-    kratos_user_id = request.headers.get('X-User')
+    kratos_user_id = request.headers.get("X-User")
     owner = project.get_owner()
-    if(kratos_user_id != owner['kratos_user_id']):
+    if kratos_user_id != owner["kratos_user_id"]:
         return "not authorized", 401
 
     res = project.query_uid()
@@ -104,16 +119,20 @@ def delete_project(project_id: str):
     else:
         return jsonify({"success": False}), 404
 
+
 def update_positions(project_id: str):
-    p = Project(current_app.config['driver'], uid=project_id)
+    p = Project(current_app.config["driver"], uid=project_id)
     pr = p.query_uid()
-    kratos_user_id = request.headers.get('X-User')
+    kratos_user_id = request.headers.get("X-User")
     owner = p.get_owner()
-    if(owner['kratos_user_id'] != kratos_user_id):
+    if owner["kratos_user_id"] != kratos_user_id:
         return "not authorized", 401
     Resource.update_all_positions(
-            current_app.config['driver'], request.json, project_id=int(project_id))
+        current_app.config["driver"], request.json, project_id=int(project_id)
+    )
     return "ok", 200
+
+
 def query_project(project_id: str):
     list_items: bool = False
     req_list_items = request.args.get("list_items")
@@ -132,7 +151,7 @@ def query_project(project_id: str):
             ans2 = list_relationships(project=project)
             if ans2:
                 ans.extend(ans2)
-        print(request.headers.get('X-User'))
+        print(request.headers.get("X-User"))
         return (
             jsonify(
                 {

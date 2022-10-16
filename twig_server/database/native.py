@@ -8,6 +8,7 @@ from neo4j import Neo4jDriver, Result, Record
 
 import twig_server.app as app
 
+
 class Node:
     def __init__(
         self, conn: Neo4jConnection, uid: Optional[int] = None
@@ -35,6 +36,7 @@ class Node:
         for key in db_obj._properties:
             properties[key] = db_obj[key]
         return properties
+
     def sync_properties(self) -> None:
         self.properties = {}
         if self.db_obj == None:
@@ -106,7 +108,7 @@ class Node:
     def get(self, name: str) -> Optional[str]:
         if name not in self.properties:
             return None
-        return str(self.properties[name])    
+        return str(self.properties[name])
 
 
 class Relationship:
@@ -156,7 +158,7 @@ class Relationship:
             return None
         return row
 
-    @classmethod # TODO abstract this away (redefinition in Node)
+    @classmethod  # TODO abstract this away (redefinition in Node)
     def extract_properties(cls, db_obj: Any):
         assert db_obj is not None
         properties = {}
@@ -164,6 +166,7 @@ class Relationship:
         for key in db_obj._properties:
             properties[key] = db_obj[key]
         return properties
+
     # sync local properties with database data
     def sync_properties(self) -> None:
         self.properties = {}
@@ -171,19 +174,21 @@ class Relationship:
             return  # if no response, properties will be empty
         assert self.db_obj is not None  # for type checking
         self.properties = Relationship.extract_properties(self.db_obj)
-    def query_endpoints(self, label_name: Optional[str] = None) -> Optional[Result]:
+
+    def query_endpoints(
+        self, label_name: Optional[str] = None
+    ) -> Optional[Result]:
         assert self.a_id is not None
         assert self.b_id is not None
         queryStr: str = f"MATCH (a)-[n{(':'+label_name) if label_name else ''}]->(b) WHERE id(a)=$a_id AND id(b)=$b_id RETURN n"
         with self.db_conn.session() as session:
-            res = session.run(queryStr, 
-                            {
-                                "a_id": int(self.a_id),
-                                "b_id": int(self.b_id)
-                            })
+            res = session.run(
+                queryStr, {"a_id": int(self.a_id), "b_id": int(self.b_id)}
+            )
             self.db_obj = Relationship.extract_relationship(res)
             self.sync_properties()
         return self.db_obj
+
     def query_uid(self, label_name: Optional[str] = None) -> Optional[Result]:
         queryStr: str = f"MATCH (a)-[n{(':'+label_name) if label_name else ''}]->(b) WHERE id(n)=$uid RETURN n"
         with self.db_conn.session() as session:
@@ -205,7 +210,9 @@ class Relationship:
 
     @classmethod
     # TODO fix some circular imports
-    def list_relationships(cls, db_conn: Neo4jDriver, project: Any) -> List[Record]:
+    def list_relationships(
+        cls, db_conn: Neo4jDriver, project: Any
+    ) -> List[Record]:
         # queryStr = f"MATCH (n:{Project._label_name})\
         #             -[{Resource._label_project_relationship}]->\
         #             (m:{Resource._label_name}) \
@@ -222,6 +229,6 @@ class Relationship:
                 RETURN m,e,a"
         res_list = []
         with db_conn.session() as session:
-            res = session.run(queryStr, {'uid': project.properties['uid']})
+            res = session.run(queryStr, {"uid": project.properties["uid"]})
             res_list = [x for x in res]
         return res_list

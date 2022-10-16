@@ -32,16 +32,17 @@ class Project(Node):
         self.owner_rls: Optional[Relationship] = None
 
     def get_owner(self) -> Optional[User]:
-        queryStr = \
-            f"MATCH (n:{User._label_name})\
+        queryStr = f"MATCH (n:{User._label_name})\
                 -[e:{Project._label_owner_relationship}]->\
                     (m:{Project._label_name})\
             WHERE id(m)=$uid\
             RETURN n"
         with self.db_conn.session() as session:
-            res = session.run(queryStr, {'uid': self.properties['uid']})
+            res = session.run(queryStr, {"uid": self.properties["uid"]})
             one_res = res.single()
-            user = Node.extract_properties(one_res.get(one_res._Record__keys[0]))
+            user = Node.extract_properties(
+                one_res.get(one_res._Record__keys[0])
+            )
         return user
 
     def set_owner(self, owner: User) -> Optional[Relationship]:
@@ -66,22 +67,20 @@ class Project(Node):
 
     @classmethod
     def list_projects(cls, db_conn: Neo4jDriver, user: User) -> List[Record]:
-        queryStr = \
-            f"MATCH (n:{User._label_name})\
+        queryStr = f"MATCH (n:{User._label_name})\
                     -[e:{Project._label_owner_relationship}]->\
                     (m:{Project._label_name}) \
               WHERE id(n)=$uid \
               RETURN n,e,m"
         res_list = []
         with db_conn.session() as session:
-            res = session.run(queryStr, { 'uid': user.properties['uid'] })
+            res = session.run(queryStr, {"uid": user.properties["uid"]})
             res_list = [x for x in res]
         return res_list
 
     @classmethod
     def explore_projects(cls, db_conn: Neo4jDriver) -> List[Record]:
-        queryStr = \
-            f"MATCH (a:{User._label_name})\
+        queryStr = f"MATCH (a:{User._label_name})\
             -[{Project._label_owner_relationship}]->\
             (m:{Project._label_name}) \
             RETURN a,m"
