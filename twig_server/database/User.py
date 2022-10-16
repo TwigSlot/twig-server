@@ -6,6 +6,7 @@ from neo4j import Record
 
 import twig_server.app as app
 
+
 class User(Node):
     _label_name: str = "User"
 
@@ -80,4 +81,3 @@ class User(Node):
     def save(self):  # save python object information to database
         if self.uid == None:
             self.create()
-
