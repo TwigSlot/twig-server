@@ -1,29 +1,27 @@
+import argparse
 import logging
+import pathlib
 import sys
 from os import environ as env
-import argparse
-import pathlib
 from typing import Optional
 
 import requests
 import urllib3
 import yaml
-from rich.logging import RichHandler
-from rich.table import Table
-from rich.console import Console
-from rich.progress import track
-
 from dotenv import load_dotenv
+from rich.console import Console
+from rich.logging import RichHandler
+from rich.progress import track
+from rich.table import Table
 from yaml import Loader
 
+from tools.datamodels import User, Project
 from tools.network_functions import (
     fetch_schemas,
     get_all_users,
     create_user,
     delete_user_from_kratos,
-    delete_user_from_neo4j,
 )
-from tools.datamodels import User, Project
 from twig_server.database.connection import Neo4jConnection
 
 
@@ -149,15 +147,6 @@ def create_projects(
             resource.to_twig_resource(twig_project, neo4j_conn).create(
                 twig_project
             )
-
-
-def seed_projects(
-    users: list[User],
-    projects: list[list[Project]],
-    neo4j_conn: Neo4jConnection,
-    console: Optional[Console] = None,
-):
-    pass
 
 
 def create_connections_and_test(
@@ -379,7 +368,8 @@ if __name__ == "__main__":
         terminal.print(
             "[red]Are you [bold]ABSOLUTELY[/bold] sure you want to do this?[/red]\n"
             "[red]This will delete [bold]EVERYTHING[/bold] in Kratos and Neo4j[/red]\n"
-            "When I say [bold red]EVERYTHING[/bold red] I mean I'll drop [bold red]EVERYTHING[/bold red] in neo4j.\n"
+            "When I say [bold red]EVERYTHING[/bold red] "
+            "I mean I'll drop [bold red]EVERYTHING[/bold red] in neo4j.\n"
             f"Your current neo4j server URL is: [bold red]{conn.url}[/bold red]\n"
             "Your current Kratos server URL is: "
             f"[bold red]{env['KRATOS_ENDPOINT']}[/bold red]"
