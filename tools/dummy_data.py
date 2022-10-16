@@ -15,7 +15,7 @@ from rich.progress import track
 from dotenv import load_dotenv
 from yaml import Loader
 
-from tools.create_dummy_data import (
+from tools.network_functions import (
     fetch_schemas,
     get_all_users,
     create_user,
@@ -90,9 +90,11 @@ def seed_users(
     if console is not None:
         # probably a minimal performance improvement but whatever.
         logger.debug("Will output progress bar")
-        user_iterator = track(users_list,
-                              description="[bold green]Creating users[/bold green]",
-                              console=console)
+        user_iterator = track(
+            users_list,
+            description="[bold green]Creating users[/bold green]",
+            console=console,
+        )
     else:
         user_iterator = users_list
 
@@ -108,8 +110,10 @@ def seed_users(
             user.to_twig_user(neo4j_conn).create()
             successful.append(user)
         else:
-            logger.debug(f"[bold red]Failed creating user: [cyan]{user.username}[/cyan]"
-                         f"[/bold red]")
+            logger.debug(
+                f"[bold red]Failed creating user: [cyan]{user.username}[/cyan]"
+                f"[/bold red]"
+            )
             logger.debug(creation_resp.json())
             failed.append((user, creation_resp.text))
     return successful, failed
@@ -254,8 +258,9 @@ if __name__ == "__main__":
     load_dotenv(dotenv_path=THIS_FILE_DIR.parent / ".env")
     check_environment_vars_setup()
 
-    logging.basicConfig(handlers=[RichHandler(markup=True,
-                                              tracebacks_suppress=[urllib3])])
+    logging.basicConfig(
+        handlers=[RichHandler(markup=True, tracebacks_suppress=[urllib3])]
+    )
     logger = logging.getLogger("dev_seed")
 
     conn, sess = create_connections_and_test(logger)
@@ -287,7 +292,9 @@ if __name__ == "__main__":
         dummy_data_folder = THIS_FILE_DIR / "dev_dummy_data"
         seed_datastores(dummy_data_folder, conn, sess, terminal, logger)
     elif args.delete:
-        terminal.print("[bold red]Deleting all users from datastores[/bold red]")
+        terminal.print(
+            "[bold red]Deleting all users from datastores[/bold red]"
+        )
         all_users = User.from_kratos_schemas(
             get_all_users(sess, env["KRATOS_ADMIN_ENDPOINT"])
         )

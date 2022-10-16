@@ -1,3 +1,7 @@
+"""
+Helper functions that access the datastores for seeding the dev db with
+dummy data.
+"""
 import requests
 
 from tools.datamodels import User
@@ -44,8 +48,7 @@ def create_user(user: User, *, admin_endpoint: str, sess: requests.Session):
         Technically, I should be raising, so I will change this behavior in the future.
     """
     response = sess.post(
-        f"{admin_endpoint}/admin/identities",
-        json=user.to_kratos_schema()
+        f"{admin_endpoint}/admin/identities", json=user.to_kratos_schema()
     )
     return response
 
@@ -66,8 +69,9 @@ def get_all_users(sess: requests.Session, kratos_admin_endpoint: str):
     return resp.json()
 
 
-def delete_user_from_kratos(user_id: str, sess: requests.Session,
-                            kratos_admin_endpoint: str):
+def delete_user_from_kratos(
+    user_id: str, sess: requests.Session, kratos_admin_endpoint: str
+):
     """
     Deletes a user from kratos by their kratos user id.
     It doesn't really matter whether you run this before or after delete_user_from_neo4j
