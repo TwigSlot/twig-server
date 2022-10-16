@@ -1,8 +1,7 @@
-import os
 from typing import Optional
 
 from neo4j import GraphDatabase, Neo4jDriver
-import twig_server.app as app
+
 
 class Neo4jConnection:
     def __init__(self, username: str, password: str, url: str) -> None:
