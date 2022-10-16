@@ -2,8 +2,8 @@
 
 - "username": "test@example.org"
   "password": "test"
-  "first_name": "" # These are left blank on purpose, so tch has to deal with them >:)
-  "last_name": ""
+  "first_name": "Test0"
+  "last_name": "User0"
 
 - "username": "test1@example.org"
   "password": "test1"
