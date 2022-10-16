@@ -26,5 +26,10 @@ def test_database_project_query_uid(create_project):
 def test_database_project_ownership(create_project):
     assert create_project.owner_rls is not None
 
-def test_database_list_projects(connection: Neo4jDriver, create_project: Project):
-    assert len(Project.list_projects(connection.conn, create_project.owner)) == 1
+
+def test_database_list_projects(
+    connection: Neo4jDriver, create_project: Project
+):
+    assert (
+        len(Project.list_projects(connection.conn, create_project.owner)) == 1
+    )
