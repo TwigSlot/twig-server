@@ -1,10 +1,10 @@
-from typing import List, Optional
-from twig_server.database.native import Node
-from twig_server.database.connection import Neo4jConnection
+from typing import Optional
 
 from neo4j import Record
 
-import twig_server.app as app
+from twig_server.database.connection import Neo4jConnection
+from twig_server.database.native import Node
+
 
 class User(Node):
     _label_name: str = "User"
@@ -74,10 +74,9 @@ class User(Node):
 
     def delete_kratos_user_id(self):
         queryStr = f"MATCH (n:{User._label_name}) WHERE n.kratos_user_id=$kratos_user_id DETACH DELETE n"
-        self.db_conn.session().run(queryStr, {"username": self.username})
+        self.db_conn.session().run(queryStr, {"kratos_user_id": self.username})
         self.db_obj = None
 
     def save(self):  # save python object information to database
         if self.uid == None:
             self.create()
-

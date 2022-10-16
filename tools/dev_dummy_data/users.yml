@@ -1,0 +1,21 @@
+# Contains the dummy users we insert into kratos for development
+
+- "username": "test@example.org"
+  "password": "test"
+  "first_name": "Test0"
+  "last_name": "User0"
+
+- "username": "test1@example.org"
+  "password": "test1"
+  "first_name": "Test1"
+  "last_name": "User1"
+
+- "username": "test2@example.org"
+  "password": "test2"
+  "first_name": ""
+  "last_name": "User2"
+
+- "username": "test3@example.org"
+  "password": "test3"
+  "first_name": "User3"
+  "last_name": ""

@@ -16,6 +16,14 @@ docker-compose up -d
 ```
 Note that building the images the first time takes longer, but after docker caches some image layers, the waiting time becomes more bearable.
 
+
+Now, seed the development database:
+```shell
+python tools/dev_tools.py -c
+```
+
+Please view `tools/dev_dummy_data` for the data that has been created in your local development database.
+
 ### Ports in use
 Make sure the following ports are free on your host. 
 

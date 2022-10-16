@@ -32,57 +32,121 @@ with app.app_context():
 def index():
     return "Index"
 
-app.add_url_rule("/project/new", 
-                 methods=["PUT"], view_func=project.new_project)
-app.add_url_rule("/project/<project_id>",
-                 methods=["GET"], view_func=project.query_project)
-app.add_url_rule("/project/<project_id>/edit",
-                 methods=["POST", "PATCH"], view_func=project.edit_project)
-app.add_url_rule("/project/<project_id>/delete", 
-                 methods=["POST", "DELETE"], view_func=project.delete_project)
-app.add_url_rule("/project/<project_id>/positions/update",
-                 methods=["POST"], view_func=project.update_positions)
-app.add_url_rule("/project/<project_id>/new",
-                 methods=["POST", "PUT"], view_func=resource.new_item)
 
-app.add_url_rule("/project/<project_id>/resource/<resource_id>/add_tag",
-                 methods=["POST", "PUT"], view_func=tag.add_tag)
-app.add_url_rule("/project/<project_id>/resource/<resource_id>/list_tags",
-                 methods=["GET"], view_func=tag.list_tags)
-app.add_url_rule("/project/<project_id>/resource/<resource_id>/dissociate_tag",
-                 methods=["POST", "DELETE"], view_func=tag.dissociate_tag)
-app.add_url_rule("/project/<project_id>/create_tag",
-                 methods=["POST", "PUT"], view_func=tag.create_tag)
-app.add_url_rule("/project/<project_id>/tag/<tag_id>/update_color",
-                 methods=["POST", "PUT"], view_func=tag.update_color)
-app.add_url_rule("/project/<project_id>/tag/<tag_id>/list_resources",
-                 methods=["GET"], view_func=tag.get_tagged_resources)
-app.add_url_rule("/project/<project_id>/tag/<tag_id>/update_name",
-                 methods=["POST", "PUT"], view_func=tag.update_name)
-app.add_url_rule("/project/<project_id>/tag/<tag_id>/update_priority",
-                 methods=["POST", "PUT"], view_func=tag.update_priority)
-app.add_url_rule("/project/<project_id>/list_all_tags",
-                 methods=["GET"], view_func=tag.list_all_tags)
-app.add_url_rule("/project/<project_id>/delete_tag",
-                 methods=["POST", "DELETE"], view_func=tag.delete_tag)
+app.add_url_rule(
+    "/project/new", methods=["PUT"], view_func=project.new_project
+)
+app.add_url_rule(
+    "/project/<project_id>", methods=["GET"], view_func=project.query_project
+)
+app.add_url_rule(
+    "/project/<project_id>/edit",
+    methods=["POST", "PATCH"],
+    view_func=project.edit_project,
+)
+app.add_url_rule(
+    "/project/<project_id>/delete",
+    methods=["POST", "DELETE"],
+    view_func=project.delete_project,
+)
+app.add_url_rule(
+    "/project/<project_id>/positions/update",
+    methods=["POST"],
+    view_func=project.update_positions,
+)
+app.add_url_rule(
+    "/project/<project_id>/new",
+    methods=["POST", "PUT"],
+    view_func=resource.new_item,
+)
 
-app.add_url_rule("/project/<project_id>/resource/<resource_id>/edit",
-                 methods=["POST", "PUT"], view_func=resource.edit_resource)
-app.add_url_rule("/project/<project_id>/resource/<resource_id>/delete",
-                 methods=["POST", "DELETE"], view_func=resource.delete_resource)
-app.add_url_rule("/project/<project_id>/relationship/<relationship_id>/edit",
-                 methods=["POST", "PUT"], view_func=resource.edit_relationship)
-app.add_url_rule("/project/<project_id>/relationship/<relationship_id>/delete",
-                 methods=["POST", "DELETE"], view_func=resource.delete_relationship)
+app.add_url_rule(
+    "/project/<project_id>/resource/<resource_id>/add_tag",
+    methods=["POST", "PUT"],
+    view_func=tag.add_tag,
+)
+app.add_url_rule(
+    "/project/<project_id>/resource/<resource_id>/list_tags",
+    methods=["GET"],
+    view_func=tag.list_tags,
+)
+app.add_url_rule(
+    "/project/<project_id>/resource/<resource_id>/dissociate_tag",
+    methods=["POST", "DELETE"],
+    view_func=tag.dissociate_tag,
+)
+app.add_url_rule(
+    "/project/<project_id>/create_tag",
+    methods=["POST", "PUT"],
+    view_func=tag.create_tag,
+)
+app.add_url_rule(
+    "/project/<project_id>/tag/<tag_id>/update_color",
+    methods=["POST", "PUT"],
+    view_func=tag.update_color,
+)
+app.add_url_rule(
+    "/project/<project_id>/tag/<tag_id>/list_resources",
+    methods=["GET"],
+    view_func=tag.get_tagged_resources,
+)
+app.add_url_rule(
+    "/project/<project_id>/tag/<tag_id>/update_name",
+    methods=["POST", "PUT"],
+    view_func=tag.update_name,
+)
+app.add_url_rule(
+    "/project/<project_id>/tag/<tag_id>/update_priority",
+    methods=["POST", "PUT"],
+    view_func=tag.update_priority,
+)
+app.add_url_rule(
+    "/project/<project_id>/list_all_tags",
+    methods=["GET"],
+    view_func=tag.list_all_tags,
+)
+app.add_url_rule(
+    "/project/<project_id>/delete_tag",
+    methods=["POST", "DELETE"],
+    view_func=tag.delete_tag,
+)
 
-app.add_url_rule("/user/<kratos_username_or_user_id>",
-                 methods=["GET"], view_func=user.query_user)
-app.add_url_rule("/user/<kratos_user_id>",
-                 methods=["PUT"], view_func=user.new_user)
-app.add_url_rule("/explore",
-                 methods=["GET"], view_func=project.explore)
-app.add_url_rule("/user/update/<kratos_user_id>",
-                 methods=["POST"], view_func=user.update_user)
+app.add_url_rule(
+    "/project/<project_id>/resource/<resource_id>/edit",
+    methods=["POST", "PUT"],
+    view_func=resource.edit_resource,
+)
+app.add_url_rule(
+    "/project/<project_id>/resource/<resource_id>/delete",
+    methods=["POST", "DELETE"],
+    view_func=resource.delete_resource,
+)
+app.add_url_rule(
+    "/project/<project_id>/relationship/<relationship_id>/edit",
+    methods=["POST", "PUT"],
+    view_func=resource.edit_relationship,
+)
+app.add_url_rule(
+    "/project/<project_id>/relationship/<relationship_id>/delete",
+    methods=["POST", "DELETE"],
+    view_func=resource.delete_relationship,
+)
+
+app.add_url_rule(
+    "/user/<kratos_username_or_user_id>",
+    methods=["GET"],
+    view_func=user.query_user,
+)
+app.add_url_rule(
+    "/user/<kratos_user_id>", methods=["PUT"], view_func=user.new_user
+)
+app.add_url_rule("/explore", methods=["GET"], view_func=project.explore)
+app.add_url_rule(
+    "/user/update/<kratos_user_id>",
+    methods=["POST"],
+    view_func=user.update_user,
+)
+
 
 def create_app(test_config=None):
     if test_config is not None:
