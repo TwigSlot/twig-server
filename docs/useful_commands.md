@@ -9,3 +9,6 @@
 
 `docker-compose up --build`
 - rebuild all containers
+
+`flask -A twig_server.app:create_app run --host 0.0.0.0 --port 5001`
+Runs flask server on 5001 specifically and on all ports to get around the stupid CORS issue

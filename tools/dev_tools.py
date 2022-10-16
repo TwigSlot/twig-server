@@ -56,7 +56,7 @@ def seed_users(
     *,
     logger: logging.Logger,
     console: Optional[Console] = None,
-) -> tuple[list[User], list[tuple[User, str]]]:
+) -> tuple[list[User], list[tuple[User, dict]]]:
     """
     Seeds all the users into the database.
 
@@ -115,7 +115,7 @@ def seed_users(
                 f"[/bold red]"
             )
             logger.debug(creation_resp.json())
-            failed.append((user, creation_resp.text))
+            failed.append((user, creation_resp.json()))
     return successful, failed
 
 
@@ -213,7 +213,11 @@ def seed_datastores(
         for user in successful:
             user_deets.add_row(user.username, user.password, user.kratos_id)
         for user, error in failed:
-            failed_creations.add_row(user.username, error)
+            # TODO: Don't hardcode this omg
+            if error["error"]["status"] == "Conflict":
+                failed_creations.add_row(user.username, "User already exists")
+            else:
+                failed_creations.add_row(user.username, error["error"]["message"])
 
     if user_deets.row_count > 0:
         console.print(user_deets)
@@ -225,7 +229,10 @@ if __name__ == "__main__":
     THIS_FILE_DIR = pathlib.Path(__file__).parent.resolve()
     terminal = Console()
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="TWIGSLOT Dev Toolkit: "
+        "A neat little toolkit for common developer tasks for TWIGSlot"
+    )
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument(
         "-i",
