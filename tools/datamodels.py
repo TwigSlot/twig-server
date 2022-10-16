@@ -10,9 +10,12 @@ Notes:
     as a reference to how you design your own data models!
 """
 import dataclasses
+import warnings
 from typing import Optional
 
 from twig_server.database.User import User as TwigUser
+from twig_server.database.Project import Project as TwigProject
+from twig_server.database.Resource import Resource as TwigResource
 from twig_server.database.connection import Neo4jConnection
 
 
@@ -41,6 +44,9 @@ class User:
     kratos_id: Optional[
         str
     ]  # Should be filled in only by the `create_user` function
+    neo4j_node_id: Optional[
+        int
+    ]  # Should be filled in only by the `create_user` function
 
     @staticmethod
     def deserialize(user_dict: dict):
@@ -59,7 +65,7 @@ class User:
             ... "password": "test",
             ... "first_name": "test", "last_name": "test"})
         """
-        return User(**user_dict, kratos_id=None)
+        return User(**user_dict, kratos_id=None, neo4j_node_id=None)
 
     @staticmethod
     def deserialize_all(user_dicts: list[dict]) -> list["User"]:
@@ -147,6 +153,7 @@ class User:
             first_name=kratos_user["traits"]["name"]["first"],
             last_name=kratos_user["traits"]["name"]["last"],
             kratos_id=kratos_user["id"],
+            neo4j_node_id=None,
         )
 
     @staticmethod
@@ -173,11 +180,10 @@ class User:
             Twig user object to minimize inefficiencies.
 
         Notes:
-            TWIGUser should definitely not need to know about Neo4jConnection,
+            TWIG User should definitely not need to know about Neo4jConnection,
             but again at the time of writing it does. pls fix tch
 
         Args:
-            user: The user object to convert
             neo4j_conn: The neo4j connection to use
 
         Returns:
@@ -191,27 +197,170 @@ class User:
         """
         if self.kratos_id is None:
             raise ValueError("User does not have a kratos id!")
-        return TwigUser(
+        # So, reading the TwigUser class, I'm not really sure
+        # whether specifying a kratos_user_id and a username is causing
+        # an excess database call. Please refactor lol.
+        twig_user = TwigUser(
             conn=neo4j_conn,
             kratos_user_id=self.kratos_id,
             username=self.username,
         )
+        return twig_user
+
+
+@dataclasses.dataclass
+class Resource:
+    """
+    A resource that belongs to a project.
+
+    See Also:
+        ``twig_server.database.Resource.Resource``
+    """
+
+    neo4j_id: Optional[int]
+    name: str
+    description: str
+
+    @staticmethod
+    def deserialize(resource_dict: dict) -> "Resource":
+        """
+        Deserializes a resource from the dictionary representation
+
+        Args:
+            resource_dict: The dictionary representation of the resource
+
+        Returns:
+            The deserialized resource
+
+        Examples:
+            >>> Resource.deserialize({"name": "test",
+            ... "description": "test"})
+        """
+        return Resource(**resource_dict, neo4j_id=None)
+
+    def to_twig_resource(
+        self, project: TwigProject, neo4j_conn: Neo4jConnection
+    ) -> TwigResource:
+        """
+        Converts this resource object into a TWIG resource object
+
+        Notes:
+            At the time of writing, the twig resource object has a couple of
+            inefficiencies. So this method will automatically stuff the
+            neo4j id into the Twig resource object to minimize inefficiencies.
+
+        Notes:
+            TWIG Resource should definitely not need to know about Neo4jConnection,
+            but again at the time of writing it does. pls fix tch
+
+        Args:
+            project: The project that this resource belongs to
+            neo4j_conn: The neo4j connection to use
+
+        Returns:
+            A twig resource object
+
+        Raises:
+            ValueError: If the resource does not have a neo4j id. This is probably
+            if you directly tried to create a twig resource object from a resource
+            loaded from the file, instead of a mutated resource object returned from the
+            seed_resources function.
+        """
+        twig_resource = TwigResource(conn=neo4j_conn,
+                                     name=self.name,
+                                     description=self.description,
+                                     project=project)
+        return twig_resource
 
 
 @dataclasses.dataclass
 class Project:
     """
     A deserialization of the project object from `dev_dummy_data/projects.yml`
-
-    Notes:
-        Unfortunately this is quite intricately tied to how the project is
-        currently modelled and will be broken in a refactor.
-
-    Notes:
-        TODO: WIP, currently under construction
     """
+
     neo4j_id: Optional[int]
     project_name: str
-    owner_neo4j_node_id: Optional[int]  # Note: this is the owner's node ID in neo4j!!!
-    owner_kratos_user_id: Optional[str]
-    owner_username: Optional[str]
+    owner_username: str
+    project_description: str
+    resources: list[Resource]
+
+    @staticmethod
+    def deserialize(owner_username: str, project_dict: dict) -> "Project":
+        """
+        Deserializes a project from a dictionary representation
+
+        Args:
+            owner_username: The username of the owner of the project
+            project_dict: The dictionary representation of the project
+
+        Returns:
+            The deserialized project
+        """
+        return Project(
+            project_name=project_dict["name"],
+            owner_username=owner_username,
+            project_description=project_dict["description"],
+            resources=[
+                Resource.deserialize(resource)
+                for resource in project_dict["resources"]
+            ],
+            neo4j_id=None,
+        )
+
+    @staticmethod
+    def deserialize_all(
+        owner_username: str, project_dicts: list[dict]
+    ) -> list["Project"]:
+        """
+        Deserializes a list of projects from a list of dictionary representations
+
+        Args:
+            owner_username: The username of the owner of the project
+            project_dicts: The dictionary representations of the projects
+
+        Returns:
+            The deserialized projects
+        """
+        return [
+            Project.deserialize(owner_username, project_dict)
+            for project_dict in project_dicts
+        ]
+
+    def to_twig_project(
+        self, user: TwigUser, neo4j_conn: Neo4jConnection
+    ) -> TwigProject:
+        """
+        Converts this project object into a TWIG project object
+
+        Notes:
+            At the time of writing, the TwigProject object has a couple of
+            inefficiencies. I'm avoiding excess neo4j database calls
+            by manually stuffing in as much information as possible so that
+            TwigProject does not have to call out to the database. Pls fix tch.
+
+        Notes:
+            TwigProject should definitely not need to know about Neo4jConnection,
+            but again at the time of writing it does. pls fix tch
+
+        Args:
+            user: The user that owns the project
+            neo4j_conn: The neo4j connection to use
+
+        Returns:
+            A twig project object
+
+        Raises:
+            ValueError: If the user does not have a kratos id.
+             See ``User.to_twig_user``
+        """
+        # twig_user = user.to_twig_user(neo4j_conn)
+        # if user.neo4j_node_id is None:
+        #     warnings.warn(
+        #         "User does not have a neo4j node id! "
+        #         "Incurring HEAVY database call!"
+        #     )
+        #     twig_user.sync_properties()
+        #     # raise ValueError("User does not have a neo4j node id!")
+
+        return TwigProject(neo4j_conn, name=self.project_name, owner=user)

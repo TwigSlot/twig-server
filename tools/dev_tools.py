@@ -1,4 +1,5 @@
 import logging
+import sys
 from os import environ as env
 import argparse
 import pathlib
@@ -22,7 +23,7 @@ from tools.network_functions import (
     delete_user_from_kratos,
     delete_user_from_neo4j,
 )
-from tools.datamodels import User
+from tools.datamodels import User, Project
 from twig_server.database.connection import Neo4jConnection
 
 
@@ -112,7 +113,9 @@ def seed_users(
             kratos_id = creation_resp.json()["id"]
             user.kratos_id = kratos_id
             # TODO: gotta handle if this fails!
-            user.to_twig_user(neo4j_conn).create()
+            neo4j_created_user = user.to_twig_user(neo4j_conn).create()
+            # Yeah, this is a non-obvious property. PLEASE REFACTOR!!!!!
+            user.neo4j_node_id = neo4j_created_user.id  # type: ignore
             successful.append(user)
         else:
             # TODO: I should handle incremental seeding. That is, if you add
@@ -125,6 +128,36 @@ def seed_users(
             logger.debug(creation_resp.json())
             failed.append((user, creation_resp.json()))
     return successful, failed
+
+
+def create_projects(
+    user: User,
+    projects: list[Project],
+    neo4j_conn: Neo4jConnection,
+    console: Optional[Console] = None,
+):
+    """Creates projects for a user"""
+    for proj in track(
+        projects,
+        description=f"Creating projects and resources for {user.username}",
+        console=console,
+    ):
+        twig_user = user.to_twig_user(neo4j_conn)
+        twig_project = proj.to_twig_project(twig_user, neo4j_conn)
+        twig_project.create(twig_user)
+        for resource in proj.resources:
+            resource.to_twig_resource(twig_project, neo4j_conn).create(
+                twig_project
+            )
+
+
+def seed_projects(
+    users: list[User],
+    projects: list[list[Project]],
+    neo4j_conn: Neo4jConnection,
+    console: Optional[Console] = None,
+):
+    pass
 
 
 def create_connections_and_test(
@@ -203,29 +236,65 @@ def seed_datastores(
         Will raise if we cannot connect to any of the datastores.
     """
     with open(dev_data_folder / "users.yml", "r") as users_file:
-        users = yaml.load(users_file, Loader=Loader)
+        with open(dev_data_folder / "projects.yml", "r") as projects_file:
+            users = yaml.load(users_file, Loader=Loader)
+            projects = yaml.load(projects_file, Loader=Loader)
 
-        user_deets = Table(title="User information")
-        user_deets.add_column("Username", style="cyan")
-        user_deets.add_column("Password", style="green")
-        user_deets.add_column("Kratos ID", style="magenta")
+            if len(users) != len(projects):
+                raise ValueError("Number of users and projects must be equal!")
 
-        failed_creations = Table(title="Failed users")
-        failed_creations.add_column("Username", style="red")
-        failed_creations.add_column("Error message")
+            user_deets = Table(title="User information")
+            user_deets.add_column("Username", style="cyan")
+            user_deets.add_column("Password", style="green")
+            user_deets.add_column("Kratos ID", style="magenta")
 
-        successful, failed = seed_users(
-            neo4j_conn, session, users, logger=logging_logger, console=console
-        )
-        # TODO: Don't bother printing out successful users
-        for user in successful:
-            user_deets.add_row(user.username, user.password, user.kratos_id)
-        for user, error in failed:
-            # TODO: Don't hardcode this omg
-            if error["error"]["status"] == "Conflict":
-                failed_creations.add_row(user.username, "User already exists")
-            else:
-                failed_creations.add_row(user.username, error["error"]["message"])
+            failed_creations = Table(title="Failed users")
+            failed_creations.add_column("Username", style="red")
+            failed_creations.add_column("Error message")
+
+            successful, failed = seed_users(
+                neo4j_conn,
+                session,
+                users,
+                logger=logging_logger,
+                console=console,
+            )
+            # TODO: Don't bother printing out successful users
+            for user in successful:
+                user_deets.add_row(
+                    user.username, user.password, user.kratos_id
+                )
+                user_projects = list(
+                    filter(
+                        lambda proj: proj["username"] == user.username,
+                        projects,
+                    )
+                )
+                if len(user_projects) != 1:
+                    raise ValueError(
+                        "There should only be one project per user!"
+                    )
+                user_projects = user_projects[0]["projects"]
+                user_projects = Project.deserialize_all(
+                    user.username, user_projects
+                )
+                create_projects(
+                    user,
+                    user_projects,
+                    neo4j_conn,
+                    console=console,
+                )
+
+            for user, error in failed:
+                # TODO: Don't hardcode this omg
+                if error["error"]["status"] == "Conflict":
+                    failed_creations.add_row(
+                        user.username, "User already exists"
+                    )
+                else:
+                    failed_creations.add_row(
+                        user.username, error["error"]["message"]
+                    )
 
     if user_deets.row_count > 0:
         console.print(user_deets)
@@ -308,15 +377,35 @@ if __name__ == "__main__":
         seed_datastores(dummy_data_folder, conn, sess, terminal, logger)
     elif args.delete:
         terminal.print(
-            "[bold red]Deleting all users from datastores[/bold red]"
+            "[red]Are you [bold]ABSOLUTELY[/bold] sure you want to do this?[/red]\n"
+            "[red]This will delete [bold]EVERYTHING[/bold] in Kratos and Neo4j[/red]\n"
+            "When I say [bold red]EVERYTHING[/bold red] I mean I'll drop [bold red]EVERYTHING[/bold red] in neo4j.\n"
+            f"Your current neo4j server URL is: [bold red]{conn.url}[/bold red]\n"
+            "Your current Kratos server URL is: "
+            f"[bold red]{env['KRATOS_ENDPOINT']}[/bold red]"
         )
-        all_users = User.from_kratos_schemas(
-            get_all_users(sess, env["KRATOS_ADMIN_ENDPOINT"])
+        proceed_purge = terminal.input(
+            "[bold red]Type 'yes' to proceed >> [/bold red]"
         )
-        for user in track(all_users, description="Deleting users"):
-            # Note: I have assumed that the user has a kratos id!
-            # This is a "safe" assumption in this case, but not in general.
-            delete_user_from_kratos(
-                user.kratos_id, sess, env["KRATOS_ADMIN_ENDPOINT"]
+        if proceed_purge != "yes":
+            terminal.print(
+                "[bold red]Aborting purge, no changes were made[/bold red]"
             )
-            delete_user_from_neo4j(user.kratos_id, conn)
+            sys.exit(1)
+        else:
+            terminal.print("[cyan]Purging all users from Kratos[/cyan]")
+            all_users = User.from_kratos_schemas(
+                get_all_users(sess, env["KRATOS_ADMIN_ENDPOINT"])
+            )
+            for user in track(
+                all_users, description="Deleting users", disable=True
+            ):
+                # Note: I have assumed that the user has a kratos id!
+                # This is a "safe" assumption in this case, but not in general.
+                delete_user_from_kratos(
+                    user.kratos_id, sess, env["KRATOS_ADMIN_ENDPOINT"]
+                )
+
+            terminal.print("[cyan]Purging Neo4j database[/cyan]")
+            with conn.conn.session() as neo4j_db_sess:
+                neo4j_db_sess.run("MATCH (n) DETACH DELETE n")
