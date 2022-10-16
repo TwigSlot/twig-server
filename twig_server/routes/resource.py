@@ -1,20 +1,10 @@
-import resource
 from flask import jsonify, current_app, request
-from twig_server.database.Project import Project
-from twig_server.database.Tag import Tag
 
-from twig_server.database.connection import Neo4jConnection
-from twig_server.database.User import User
 from twig_server.database.Resource import Resource
-from neo4j import graph
-
-from twig_server.database.native import Node, Relationship
-import twig_server.app as app
+from twig_server.database.native import Relationship
 from twig_server.routes.helper import (
     helper_get_project,
     helper_get_resource,
-    helper_get_tag,
-    tag_belongs_to_project,
     authorize_user,
 )
 

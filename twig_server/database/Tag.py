@@ -1,9 +1,10 @@
+from typing import Any, List, Optional
+
+from neo4j import Record
+
+from twig_server.database.Project import Project
 from twig_server.database.connection import Neo4jConnection, Neo4jDriver
 from twig_server.database.native import Node, Relationship
-from twig_server.database.Project import Project
-from typing import Any, List, Optional
-from neo4j import Record
-import twig_server.app as app
 
 
 class Tag(Node):

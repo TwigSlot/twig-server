@@ -1,10 +1,9 @@
-from typing import List, Optional
-from twig_server.database.native import Node
-from twig_server.database.connection import Neo4jConnection
+from typing import Optional
 
 from neo4j import Record
 
-import twig_server.app as app
+from twig_server.database.connection import Neo4jConnection
+from twig_server.database.native import Node
 
 
 class User(Node):
