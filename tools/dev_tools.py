@@ -58,12 +58,17 @@ def seed_users(
     console: Optional[Console] = None,
 ) -> tuple[list[User], list[tuple[User, dict]]]:
     """
-    Seeds all the users into the database.
+    Seeds all the users into the database. Also creates some dummy projects
+    for each user.
 
     Notes:
         Currently due to non-optimal factoring this also actually requires us
         to insert the users into the Neo4j database. Future work by tch (or me) will
         eliminate this dependency.
+
+    Notes:
+        Returned users that were successfully created will contain the kratos user
+        id.
 
     Args:
         users: List of users in the proper format
@@ -110,6 +115,9 @@ def seed_users(
             user.to_twig_user(neo4j_conn).create()
             successful.append(user)
         else:
+            # TODO: I should handle incremental seeding. That is, if you add
+            # more users, you should be able to seed them without seeing a bunch
+            # of errors.
             logger.debug(
                 f"[bold red]Failed creating user: [cyan]{user.username}[/cyan]"
                 f"[/bold red]"

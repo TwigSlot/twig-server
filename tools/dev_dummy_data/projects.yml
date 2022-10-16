@@ -1,5 +1,86 @@
 # Configuration for automatic generation of dummy projects
+# TODO: Split this up into like 1 file per dummy user.
+# TODO: Perhaps it's better design to simply contain each user's details along with their projects in the same file.
 - username: "test@example.org"
+  projects:
+    - name: "test0_proj0"
+      description: "Test 0's Project 0"
+      resources:
+        - name: "test_proj0_res0"
+          description: "Test 0's Project 0 Resource 0"
+        - name: "test_proj0_res1"
+          description: "Test 0's Project 0 Resource 1"
+        - name: "test_proj0_res2"
+          description: "Test 0's Project 0 Resource 2"
+    - name: "test0_proj1"
+      description: "Test 0's Project 1"
+      resources:
+        - name: "test_proj1_res0"
+          description: "Test 0's Project 1 Resource 0"
+        - name: "test_proj1_res1"
+          description: "Test 0's Project 1 Resource 1"
+        - name: "test_proj1_res2"
+          description: "Test 0's Project 1 Resource 2"
+
 - username: "test1@example.org"
+  projects:
+    - name: "test1_proj0"
+      description: "Test 1's Project 0"
+      resources:
+        - name: "test1_proj0_res0"
+          description: "Test 1's Project 0 Resource 0"
+        - name: "test1_proj0_res1"
+          description: "Test 1's Project 0 Resource 1"
+        - name: "test1_proj0_res2"
+          description: "Test 1's Project 0 Resource 2"
+    - name: "test1_proj1"
+      description: "Test 1's Project 1"
+      resources:
+        - name: "test1_proj1_res0"
+          description: "Test 1's Project 1 Resource 0"
+        - name: "test1_proj1_res1"
+          description: "Test 1's Project 1 Resource 1"
+        - name: "test1_proj1_res2"
+          description: "Test 1's Project 1 Resource 2"
+
 - username: "test2@example.org"
+  projects:
+    - name: "test2_proj0"
+      description: "Test 2's Project 0"
+      resources:
+        - name: "test2_proj0_res0"
+          description: "Test 2's Project 0 Resource 0"
+        - name: "test2_proj0_res1"
+          description: "Test 2's Project 0 Resource 1"
+        - name: "test2_proj0_res2"
+          description: "Test 2's Project 0 Resource 2"
+    - name: "test2_proj1"
+      description: "Test 2's Project 1"
+      resources:
+        - name: "test2_proj1_res0"
+          description: "Test 2's Project 1 Resource 0"
+        - name: "test2_proj1_res1"
+          description: "Test 2's Project 1 Resource 1"
+        - name: "test2_proj1_res2"
+          description: "Test 2's Project 1 Resource 2"
+
 - username: "test3@example.org"
+  projects:
+    - name: "test3_proj0"
+      description: "Test 3's Project 0"
+      resources:
+        - name: "test3_proj0_res0"
+          description: "Test 3's Project 0 Resource 0"
+        - name: "test3_proj0_res1"
+          description: "Test 3's Project 0 Resource 1"
+        - name: "test3_proj0_res2"
+          description: "Test 3's Project 0 Resource 2"
+    - name: "test3_proj1"
+      description: "Test 3's Project 1"
+      resources:
+        - name: "test3_proj1_res0"
+          description: "Test 3's Project 1 Resource 0"
+        - name: "test3_proj1_res1"
+          description: "Test 3's Project 1 Resource 1"
+        - name: "test3_proj1_res2"
+          description: "Test 3's Project 1 Resource 2"

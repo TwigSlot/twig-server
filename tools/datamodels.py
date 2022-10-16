@@ -30,11 +30,17 @@ class User:
         empty. I'm also not checking if the username is a valid email.
         Please don't send empty data!!
     """
+
     username: str  # Note that this is also the email!
-    password: Optional[str]  # If password is None then this object was constructed by the kratos response
+    password: Optional[
+        str
+    ]  # If password is None then this object was constructed by the kratos
+    # response
     first_name: str
     last_name: str
-    kratos_id: Optional[str]  # Should be filled in only by the `create_user` function
+    kratos_id: Optional[
+        str
+    ]  # Should be filled in only by the `create_user` function
 
     @staticmethod
     def deserialize(user_dict: dict):
@@ -105,20 +111,13 @@ class User:
         """
         return {
             "credentials": {
-                "password": {
-                    "config": {
-                        "password": self.password
-                    }
-                }
+                "password": {"config": {"password": self.password}}
             },
             "state": "active",
             "schema_id": "default",  # NOTE: Definitely hardcoded, lol
             "traits": {
                 "email": self.username,
-                "name": {
-                    "first": self.first_name,
-                    "last": self.last_name
-                }
+                "name": {"first": self.first_name, "last": self.last_name},
             },
             "verifiable_addresses": [
                 {
@@ -126,9 +125,9 @@ class User:
                     "status": "verified",
                     "value": self.username,
                     "verified": True,
-                    "via": "default"  # see above, this is hardcoded.
+                    "via": "default",  # see above, this is hardcoded.
                 }
-            ]
+            ],
         }
 
     @staticmethod
@@ -147,7 +146,7 @@ class User:
             password=None,
             first_name=kratos_user["traits"]["name"]["first"],
             last_name=kratos_user["traits"]["name"]["last"],
-            kratos_id=kratos_user["id"]
+            kratos_id=kratos_user["id"],
         )
 
     @staticmethod
@@ -192,5 +191,27 @@ class User:
         """
         if self.kratos_id is None:
             raise ValueError("User does not have a kratos id!")
-        return TwigUser(conn=neo4j_conn, kratos_user_id=self.kratos_id,
-                        username=self.username)
+        return TwigUser(
+            conn=neo4j_conn,
+            kratos_user_id=self.kratos_id,
+            username=self.username,
+        )
+
+
+@dataclasses.dataclass
+class Project:
+    """
+    A deserialization of the project object from `dev_dummy_data/projects.yml`
+
+    Notes:
+        Unfortunately this is quite intricately tied to how the project is
+        currently modelled and will be broken in a refactor.
+
+    Notes:
+        TODO: WIP, currently under construction
+    """
+    neo4j_id: Optional[int]
+    project_name: str
+    owner_neo4j_node_id: Optional[int]  # Note: this is the owner's node ID in neo4j!!!
+    owner_kratos_user_id: Optional[str]
+    owner_username: Optional[str]
