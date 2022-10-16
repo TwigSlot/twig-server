@@ -1,11 +1,10 @@
-from flask import jsonify, current_app, request, redirect, url_for
-from twig_server.database.Project import Project
-
-from twig_server.database.User import User
+from flask import jsonify, current_app, request
 from neo4j import graph
 
-from twig_server.database.native import Node
 import twig_server.app as app
+from twig_server.database.Project import Project
+from twig_server.database.User import User
+from twig_server.database.native import Node
 
 
 def list_projects(user: User):
