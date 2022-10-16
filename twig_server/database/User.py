@@ -74,7 +74,7 @@ class User(Node):
 
     def delete_kratos_user_id(self):
         queryStr = f"MATCH (n:{User._label_name}) WHERE n.kratos_user_id=$kratos_user_id DETACH DELETE n"
-        self.db_conn.session().run(queryStr, {"username": self.username})
+        self.db_conn.session().run(queryStr, {"kratos_user_id": self.username})
         self.db_obj = None
 
     def save(self):  # save python object information to database

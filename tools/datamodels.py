@@ -10,6 +10,7 @@ Notes:
     as a reference to how you design your own data models!
 """
 import dataclasses
+from typing import Optional
 
 from twig_server.database.User import User as TwigUser
 from twig_server.database.connection import Neo4jConnection
@@ -29,11 +30,11 @@ class User:
         empty. I'm also not checking if the username is a valid email.
         Please don't send empty data!!
     """
-    user_id: str  # Note: seems to be some sort of uuid4.
     username: str  # Note that this is also the email!
-    password: str  # Note: plaintext
+    password: Optional[str]  # If password is None then this object was constructed by the kratos response
     first_name: str
     last_name: str
+    kratos_id: Optional[str]  # Should be filled in only by the `create_user` function
 
     @staticmethod
     def deserialize(user_dict: dict):
@@ -52,7 +53,7 @@ class User:
             ... "password": "test",
             ... "first_name": "test", "last_name": "test"})
         """
-        return User(**user_dict)
+        return User(**user_dict, kratos_id=None)
 
     @staticmethod
     def deserialize_all(user_dicts: list[dict]) -> list["User"]:
@@ -122,7 +123,6 @@ class User:
             "verifiable_addresses": [
                 {
                     # Note: the user_id doesn't actually seem to affect anything!
-                    "id": self.user_id,
                     "status": "verified",
                     "value": self.username,
                     "verified": True,
@@ -132,8 +132,38 @@ class User:
         }
 
     @staticmethod
-    def to_twig_user(user: "User", neo4j_conn: Neo4jConnection,
-                     kratos_id: str) -> TwigUser:
+    def from_kratos_schema(kratos_user: dict) -> "User":
+        """
+        Converts a user from the kratos schema into a user object
+
+        Args:
+            kratos_user: The kratos user schema
+
+        Returns:
+            The user object
+        """
+        return User(
+            username=kratos_user["traits"]["email"],
+            password=None,
+            first_name=kratos_user["traits"]["name"]["first"],
+            last_name=kratos_user["traits"]["name"]["last"],
+            kratos_id=kratos_user["id"]
+        )
+
+    @staticmethod
+    def from_kratos_schemas(kratos_response: list[dict]) -> list["User"]:
+        """
+        Converts a list of kratos users into a list of user objects
+
+        Args:
+            kratos_response: The kratos user schema
+
+        Returns:
+            The user objects
+        """
+        return [User.from_kratos_schema(user) for user in kratos_response]
+
+    def to_twig_user(self, neo4j_conn: Neo4jConnection) -> TwigUser:
         """
         Converts this user object into a TWIG user object
 
@@ -150,10 +180,17 @@ class User:
         Args:
             user: The user object to convert
             neo4j_conn: The neo4j connection to use
-            kratos_id: The kratos id to use
 
         Returns:
             A twig user object
+
+        Raises:
+            ValueError: If the user does not have a kratos id. This is probably
+            if you directly tried to create a twig user object from a user
+            loaded from the file, instead of a mutated user object returned from the
+            seed_users function.
         """
-        return TwigUser(conn=neo4j_conn, kratos_user_id=kratos_id,
-                        username=user.username)
+        if self.kratos_id is None:
+            raise ValueError("User does not have a kratos id!")
+        return TwigUser(conn=neo4j_conn, kratos_user_id=self.kratos_id,
+                        username=self.username)
