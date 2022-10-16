@@ -1,0 +1,27 @@
+# Contains the dummy users we insert into kratos for development
+# Note: user_id is actually useless but whatever, we'll deal with that
+# later.
+
+- "user_id": "d67caf2a-5419-42a9-9636-a22e796008e2"
+  "username": "test@example.org"
+  "password": "test"
+  "first_name": "" # These are left blank on purpose, so tch has to deal with them >:)
+  "last_name": ""
+
+- "user_id": "be61dad5-a40b-40d6-a54c-ca6065c8d39e"
+  "username": "test1@example.org"
+  "password": "test1"
+  "first_name": "Test1"
+  "last_name": "User1"
+
+- "user_id": "850400c6-dee9-42de-8a2d-41ce4d4e0940"
+  "username": "test2@example.org"
+  "password": "test2"
+  "first_name": ""
+  "last_name": "User2"
+
+- "user_id": "73f34738-3636-452e-80b3-089580ed7497"
+  "username": "test3@example.org"
+  "password": "test3"
+  "first_name": "User3"
+  "last_name": ""

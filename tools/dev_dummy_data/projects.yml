@@ -1,0 +1,5 @@
+# Configuration for automatic generation of dummy projects
+- username: "test@example.org"
+- username: "test1@example.org"
+- username: "test2@example.org"
+- username: "test3@example.org"

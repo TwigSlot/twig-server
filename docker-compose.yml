@@ -61,6 +61,12 @@ services:
         read_only: false
     networks:
       - internal
+  oathkeeper:
+    build:
+      dockerfile: ./containers/oathkeeper/Dockerfile
+      context: .
+    networks:
+      - internal
   kratos-selfservice-ui-node:
     image: oryd/kratos-selfservice-ui-node:v0.9.0-alpha.2
     environment:
