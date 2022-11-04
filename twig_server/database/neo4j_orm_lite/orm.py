@@ -4,6 +4,7 @@ from uuid import UUID
 
 from neo4j import Neo4jDriver
 
+from twig_server.database.graph.neo4j_objects import Neo4jNode
 from twig_server.database.graph.twigslot_objects import Project, Resource
 
 
@@ -14,6 +15,25 @@ class ResourceNotFound(Exception):
 
 class ProjectNotFound(Exception):
     pass
+
+class RawNeo4jBacking:
+    def __init__(self, conn: Neo4jDriver):
+        self.conn = conn
+
+    def insert(self, obj: Neo4jNode) -> Optional[int]:
+        """Inserts a new object into the database"""
+        insert_labels = obj.labels
+        insert_properties = obj.properties
+        insert_query = f"CREATE (n:{insert_labels}) SET n = $props RETURN id(n)"
+
+        with self.conn.session() as session:
+            # TODO: Wait, can we just do this?
+            res = session.run(insert_query, kwparameters=insert_properties)
+            res = res.single()
+            if res:
+                return res[0]
+            else:
+                return None
 
 
 class Neo4jOrm:
@@ -327,6 +347,30 @@ class Neo4jOrm:
                 raise ProjectNotFound(
                     f"Project with id {project_id} does not exist"
                 )
+
+    def update_resource(self, resource_id: int, new_data: Resource) -> None:
+        """
+        Updates a resource in the database.
+
+        Args:
+            resource_id: The ID of the resource to update.
+            new_data: The new data to update the resource with.
+
+        """
+        # TODO: Check this query string works
+        query_string = """
+        MATCH (r:resource)
+        WHERE id(r) = $resource_id
+        SET r = $new_data
+        """
+        with self.conn.session() as sess:
+            sess.run(
+                query_string,
+                {
+                    "resource_id": resource_id,
+                    "new_data": json.loads(new_data.json()),
+                },
+            )
 
     def delete_resource(self, resource_id: int):
         """
