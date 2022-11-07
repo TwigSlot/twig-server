@@ -10,8 +10,10 @@ services:
       - "7474:7474"
       - "7473:7473"
       - "7687:7687"
-    env_file:
-      - .env
+    environment:
+      NEO4J_AUTH: "neo4j/notneo4j"
+      USERNAME: ${NEO4J_USERNAME}
+      PASSWORD: ${NEO4J_PASSWORD}
     networks:
       - internal
     healthcheck:
@@ -20,6 +22,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+
   kratos-migrate:
     image: oryd/kratos:v0.10.1
     environment:

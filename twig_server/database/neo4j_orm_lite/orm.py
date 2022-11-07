@@ -2,10 +2,17 @@ import json
 from typing import Optional
 from uuid import UUID
 
+from executing import NotOneValueFound
 from neo4j import Neo4jDriver
 
 from twig_server.database.graph.neo4j_objects import Neo4jNode
-from twig_server.database.graph.twigslot_objects import Project, Resource
+from twig_server.database.graph.twigslot_objects import (
+    Project,
+    Resource,
+    ProjectId,
+    ResourceId,
+    ResourceRelationships, ResourceGraph, RelationshipId,
+)
 
 
 # TODO: Move these into another file
@@ -16,6 +23,7 @@ class ResourceNotFound(Exception):
 class ProjectNotFound(Exception):
     pass
 
+
 class RawNeo4jBacking:
     def __init__(self, conn: Neo4jDriver):
         self.conn = conn
@@ -24,7 +32,9 @@ class RawNeo4jBacking:
         """Inserts a new object into the database"""
         insert_labels = obj.labels
         insert_properties = obj.properties
-        insert_query = f"CREATE (n:{insert_labels}) SET n = $props RETURN id(n)"
+        insert_query = (
+            f"CREATE (n:{insert_labels}) SET n = $props RETURN id(n)"
+        )
 
         with self.conn.session() as session:
             # TODO: Wait, can we just do this?
@@ -49,7 +59,7 @@ class Neo4jOrm:
         # Note: assumes that connection is already established!
         self.conn = conn
 
-    def get_all_projects(self) -> Optional[list[Project]]:
+    def get_all_projects(self) -> list[Project]:
         """
         Retrieves all the projects we currently have stored.
 
@@ -61,11 +71,6 @@ class Neo4jOrm:
             do this, actually. We might want to paginate this.
             TODO: Figure out if we need to paginate this.
 
-        Notes:
-            It's a bit pedantic to have Optional, since it's
-            unlikely there will be NO projects at all.
-            TODO: Don't be so pedantic.
-
         Returns:
             A list of projects will be returned if and only if
             there are nonzero projects in the database.
@@ -76,18 +81,21 @@ class Neo4jOrm:
         """
         with self.conn.session() as sess:
             results = sess.run(query_string)
-            # TODO: Check if this actually works
             return_val = list(
                 map(
-                    # in particular, this line. What is `record`?
-                    lambda record: Project(**record),
+                    lambda record: Project(
+                        id=record["p"].id,
+                        # Note: record['p'].items() is a dict_keys
+                        # not a dict, so this is needed
+                        **dict(record["p"].items()),
+                    ),
                     results,
                 )
             )
-            return return_val if len(return_val) > 0 else None
+            return return_val
 
     def get_projects_accessible_to_user(
-        self, user_id: UUID
+            self, user_id: UUID
     ) -> Optional[list[Project]]:
         """
         Retrieves all the projects accessible to a user. These projects can
@@ -137,7 +145,7 @@ class Neo4jOrm:
             )
             return return_val if len(return_val) > 0 else None
 
-    def get_project(self, project_id: int) -> Optional[Project]:
+    def get_project(self, project_id: ProjectId) -> Optional[Project]:
         """
         Retrieves a project by its neo4j ID.
 
@@ -160,13 +168,19 @@ class Neo4jOrm:
         RETURN p
         """
         with self.conn.session() as sess:
-            # TODO: Verify that this result actually only yields one object
             result = sess.run(query_string, {"project_id": project_id})
-            result = result.single()
+            # Note: We are assuming that the result is certainly a single object
+            # If you see a warning, it sounds like a neo4j bug, since the id
+            # should be a unique mapping to a single neo4j node
+            result = result.single()[0]
 
-            return Project(**result) if result else None
+            return (
+                Project(id=result.id, **dict(result.items()))
+                if result
+                else None
+            )
 
-    def create_project(self, project: Project) -> int:
+    def create_project(self, project: Project) -> ProjectId:
         """
         Creates a new project in the database.
 
@@ -180,24 +194,19 @@ class Neo4jOrm:
             The ID of the newly created project.
         """
 
-        # TODO: Check this query string works
         query_string = """
         CREATE (p:project)
         SET p = $project
         RETURN id(p)
         """
         with self.conn.session() as sess:
-            # TODO: Verify that this actually works
             result = sess.run(
                 query_string,
-                {
-                    # TODO: Deserializing and reserializing like this could be expensive
-                    "project": json.loads(project.json())
-                },
+                {"project": json.loads(project.json())},
             )
             return result.data()[0]["id(p)"]
 
-    def update_project(self, project_id: int, new_data: Project) -> None:
+    def update_project(self, project_id: ProjectId, new_data: Project) -> None:
         """
         Updates a project in the database.
 
@@ -205,24 +214,35 @@ class Neo4jOrm:
             project_id: The ID of the project to update.
             new_data: The new data to update the project with.
 
+        Notes:
+            This is extremely low level and will happily update the project even
+            if you change the following properties:
+            - owner
+
+        Notes:
+            You are expected to change your own modification_time.
+
         """
 
-        # TODO: Check this query string works
+        # TODO: Do a proper cypher update
+        # https://neo4j.com/developer/cypher/updating/#cypher-update
         query_string = """
         MATCH (p:project)
         WHERE id(p) = $project_id
         SET p = $new_data
         """
+
         with self.conn.session() as sess:
             sess.run(
                 query_string,
                 {
                     "project_id": project_id,
-                    "new_data": json.loads(new_data.json()),
+                    "new_data": json.loads(new_data.json(exclude={"id",
+                                                                  "resources"})),
                 },
             )
 
-    def delete_project(self, project_id: int) -> None:
+    def delete_project(self, project_id: ProjectId) -> None:
         """
         Deletes a project from the database.
 
@@ -230,7 +250,6 @@ class Neo4jOrm:
             project_id: The ID of the project to delete.
         """
 
-        # TODO: Check this query string works
         query_string = """
         MATCH (p:project)
         WHERE id(p) = $project_id
@@ -239,7 +258,7 @@ class Neo4jOrm:
         with self.conn.session() as sess:
             sess.run(query_string, {"project_id": project_id})
 
-    def get_resources(self, project_id: int) -> Optional[list[Resource]]:
+    def get_resources(self, project_id: ProjectId) -> Optional[ResourceGraph]:
         """
         Retrieves all the resources in a project.
 
@@ -247,29 +266,53 @@ class Neo4jOrm:
             project_id: The ID of the project to retrieve resources from.
 
         Returns:
-            A list of resources if the project exists, None otherwise.
+            A ResourceGraph object if the project exists, None otherwise.
         """
 
-        # TODO: Check this query string works
-        query_string = """
-        MATCH (p:Project)-[:Has_Resource]->(r:resource)
+        # We need to pull out the relationships between the resources too
+        # so we can build the graph
+
+        vertices_query_string = """
+        MATCH (p:project)-[:has_resource]->(r:resource)
         WHERE id(p) = $project_id
         RETURN r
         """
-        with self.conn.session() as sess:
-            results = sess.run(query_string, {"project_id": project_id})
-            return_val = list(
-                map(
-                    # in particular, this line. What is `record`?
-                    lambda record: Resource(**record),
-                    results,
-                )
-            )
-            return return_val if len(return_val) > 0 else None
 
-    def get_resource(self, resource_id: int) -> Resource:
+        # Is it inefficient to leave in p, r1 and r2 when I'm not extracting them?
+        edges_query_string = """
+        MATCH (p:project)-[:has_resource]->(r1:resource)-[pr:prereq]->(r2:resource)
+        WHERE id(p) = $project_id
+        RETURN pr
         """
-        Retrieves a resource with the id
+        with self.conn.session() as sess:
+            vertices = sess.run(vertices_query_string, {"project_id": project_id})
+            edges = sess.run(edges_query_string, {"project_id": project_id})
+
+            # TODO: This dictionary comprehension should be hidden away in a converter
+            vertex_set = {
+                ResourceId(vertex['r'].id): Resource(id=ResourceId(vertex['r'].id),
+                                                     **dict(vertex['r'].items()))
+                for vertex in vertices
+            }
+            if len(vertex_set) == 0:
+                return None
+
+            # TODO: Hide this away too
+            edge_set = {
+                (ResourceId(edge['pr'].start_node.id),
+                 ResourceId(edge['pr'].end_node.id)) for edge in edges
+            }
+
+            return_val = ResourceGraph.parse_obj({
+                "_vertices": vertex_set,
+                "edges": edge_set
+            })
+            return return_val
+
+    def get_resource(self, resource_id: ResourceId) -> Resource:
+        """
+        Retrieves a resource with the id. This can retrieve a resource under any
+        project.
 
         Args:
             resource_id: The id of the resource
@@ -284,10 +327,6 @@ class Neo4jOrm:
             This makes no guarantee that the resource has not changed since it was
             retrieved. You could genuinely get a different resource with the same ID.
         """
-
-        # TODO: Check this query string works
-        # TODO: Check if this can be combined with get_resources to reduce duplications
-        #  maybe like a private method or something.
         query_string = """
         MATCH (r:resource)
         WHERE id(r) = $resource_id
@@ -295,19 +334,30 @@ class Neo4jOrm:
         """
         with self.conn.session() as sess:
             results = sess.run(query_string, {"resource_id": resource_id})
-            result = results.single()
-            if result:
-                return Resource(**result)
-            else:
+            try:
+                result = results.single()
+                if result is None:
+                    raise
+                node = result["r"]
+                return Resource(id=node.id, **dict(node.items()))
+            except NotOneValueFound:
+                raise ResourceNotFound()
+            except ResourceNotFound:
                 raise ResourceNotFound(
                     f"Resource with id {resource_id} does not exist"
                 )
 
-    def create_resource(self, resource: Resource, project_id: int) -> int:
+    def create_resource(
+            self,
+            resource: Resource,
+            project_id: ProjectId,
+            relationships: Optional[ResourceRelationships] = None,
+    ) -> ResourceId:
         """
         Creates a new resource in Neo4j
 
         Args:
+            relationships:
             resource: The resource to create
             project_id: The neo4j UID of the project to attach it to.
 
@@ -328,7 +378,7 @@ class Neo4jOrm:
         query_string = """
         MATCH (p:project)
         WHERE id(p) = $project_id
-        CREATE (p)-[:Has_Resource]->(r:resource)
+        CREATE (p)-[:has_resource]->(r:resource)
         SET r = $resource
         RETURN id(r)
         """
@@ -348,7 +398,9 @@ class Neo4jOrm:
                     f"Project with id {project_id} does not exist"
                 )
 
-    def update_resource(self, resource_id: int, new_data: Resource) -> None:
+    def update_resource(
+            self, resource_id: ResourceId, new_data: Resource
+    ) -> None:
         """
         Updates a resource in the database.
 
@@ -363,6 +415,9 @@ class Neo4jOrm:
         WHERE id(r) = $resource_id
         SET r = $new_data
         """
+
+        assert new_data.id is None, "Resource ID should be None"
+
         with self.conn.session() as sess:
             sess.run(
                 query_string,
@@ -372,7 +427,33 @@ class Neo4jOrm:
                 },
             )
 
-    def delete_resource(self, resource_id: int):
+    def add_relationship(self, src: ResourceId, dst: ResourceId) -> RelationshipId:
+        """
+        Adds a relationship between 2 resources.
+        This is a directed edge from `src` to `dst`
+
+        Args:
+            src: The source resource
+            dst: The destination resource
+
+        Returns:
+
+        """
+        query_string = """
+        MATCH (src:resource), (dst:resource)
+        WHERE id(src) = $src AND id(dst) = $dst
+        CREATE (src)-[rs:prereq]->(dst)
+        RETURN rs
+        """
+        with self.conn.session() as sess:
+            result = sess.run(query_string, {"src": src, "dst": dst})
+            if result:
+                return result.single()["rs"].id
+
+    def add_multiple_relationships(self, relationships: ResourceRelationships):
+        raise NotImplementedError("Not implemented yet")
+
+    def delete_resource(self, resource_id: ResourceId):
         """
         Deletes a resource with id
 
@@ -386,7 +467,6 @@ class Neo4jOrm:
             :py:class:`ResourceNotFound` if the resource does not exist
         """
 
-        # TODO: Check this query string works
         query_string = """
         MATCH (r:resource)
         WHERE id(r) = $resource_id
@@ -394,7 +474,4 @@ class Neo4jOrm:
         """
         with self.conn.session() as sess:
             results = sess.run(query_string, {"resource_id": resource_id})
-            if results.single() is None:
-                raise ResourceNotFound(
-                    f"Resource with id {resource_id} does not exist"
-                )
+            # TODO: Can we assume that it succeeded?
