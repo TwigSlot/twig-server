@@ -14,8 +14,14 @@ services:
       - .env
     networks:
       - internal
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
   kratos-migrate:
-    image: oryd/kratos:v0.9.0-alpha.2
+    image: oryd/kratos:v0.10.1
     environment:
       - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
     volumes:
@@ -28,7 +34,7 @@ services:
   kratos:
     depends_on:
       - kratos-migrate
-    image: oryd/kratos:v0.9.0-alpha.2
+    image: oryd/kratos:v0.10.1
     ports:
       - '4433:4433' # public
       - '4434:4434' # admin
@@ -41,8 +47,15 @@ services:
       - ./containers/kratos:/etc/config/kratos
     networks:
       - internal
+    healthcheck:
+      # see: https://github.com/ory/kratos/issues/2524
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:4433/health/ready"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
   kratos-selfservice-ui-node:
-    image: oryd/kratos-selfservice-ui-node:v0.9.0-alpha.2
+    image: oryd/kratos-selfservice-ui-node:v0.11.0-alpha.0
     environment:
       - PORT=3000
       - KRATOS_PUBLIC_URL=http://kratos:4433/

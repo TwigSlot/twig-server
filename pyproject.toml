@@ -23,6 +23,10 @@ pytest-dotenv = "^0.5.2"
 autopep8 = "^1.7.0"
 mypy = "^0.971"
 
+[tool.poetry.scripts]
+#twig-server = "flask -A twig_server.app:create_app run --host 0.0.0.0 --port 5001"
+twig-server = "server:main"
+
 [tool.black]
 line-length = 79
 
