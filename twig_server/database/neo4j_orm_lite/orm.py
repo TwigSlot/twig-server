@@ -357,7 +357,8 @@ class Neo4jOrm:
         Creates a new resource in Neo4j
 
         Args:
-            relationships:
+            relationships: The relationships to create with the resource.
+                Currently not implemented.
             resource: The resource to create
             project_id: The neo4j UID of the project to attach it to.
 
@@ -372,8 +373,10 @@ class Neo4jOrm:
             access to the project. It does not check this.
         """
 
+        if relationships is not None:
+            raise NotImplementedError("Creating a resource with relationships is not yet implemented.")
+
         # TODO: Should we check for duplicate resources? How should we do that anyway?
-        # TODO: Check this query string works
 
         query_string = """
         MATCH (p:project)
@@ -409,21 +412,20 @@ class Neo4jOrm:
             new_data: The new data to update the resource with.
 
         """
-        # TODO: Check this query string works
         query_string = """
         MATCH (r:resource)
         WHERE id(r) = $resource_id
         SET r = $new_data
         """
 
-        assert new_data.id is None, "Resource ID should be None"
-
         with self.conn.session() as sess:
             sess.run(
                 query_string,
                 {
                     "resource_id": resource_id,
-                    "new_data": json.loads(new_data.json()),
+                    "new_data": json.loads(new_data.json(
+                        exclude={"id"}
+                    ))
                 },
             )
 
@@ -437,7 +439,7 @@ class Neo4jOrm:
             dst: The destination resource
 
         Returns:
-
+            The ID of the relationship created
         """
         query_string = """
         MATCH (src:resource), (dst:resource)

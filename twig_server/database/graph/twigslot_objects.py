@@ -74,14 +74,12 @@ class Resource(BaseModel):
 
     # Time that this resource was created, in UTC
     creation_time: datetime.datetime = Field(
-        default_factory=datetime.datetime.utcnow,
-        allow_mutation=False
+        default_factory=datetime.datetime.utcnow, allow_mutation=False
     )
 
     # Time that this resource was last modified
-    _last_modification_time: datetime.datetime = Field(
-        default_factory=datetime.datetime.utcnow,
-        allow_mutation=False
+    last_modification_time: datetime.datetime = Field(
+        default_factory=datetime.datetime.utcnow
     )
 
     @validator("description")
@@ -101,9 +99,9 @@ class Resource(BaseModel):
 
 
 class ResourceRelationships(BaseModel):
-    resource_id: int
-    incoming: set[int]
-    outgoing: set[int]
+    resource_id: ResourceId
+    incoming: set[ResourceId]
+    outgoing: set[ResourceId]
 
 
 class ResourceGraph(BaseModel):
