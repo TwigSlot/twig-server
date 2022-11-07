@@ -46,7 +46,7 @@ class RawNeo4jBacking:
                 return None
 
 
-class Neo4jOrm:
+class Twig4jOrm:
     """
     A simple Neo4j ORM for Twig.
 
