@@ -2,20 +2,28 @@ import json
 from typing import Optional
 from uuid import UUID
 
-from executing import NotOneValueFound
+import executing
 from neo4j import Neo4jDriver
+from pydantic import BaseModel
 
-from twig_server.database.graph.neo4j_objects import Neo4jNode
 from twig_server.database.graph.twigslot_objects import (
     Project,
     Resource,
     ProjectId,
     ResourceId,
-    ResourceRelationships, ResourceGraph, RelationshipId,
+    ResourceRelationships,
+    ResourceGraph,
+    RelationshipId,
 )
 
 
-# TODO: Move these into another file
+# TODO: Move exceptions into another file
+
+
+class CreationFailure(Exception):
+    pass
+
+
 class ResourceNotFound(Exception):
     pass
 
@@ -25,25 +33,54 @@ class ProjectNotFound(Exception):
 
 
 class RawNeo4jBacking:
+    """Some low level functions for *most* C, U, D operations"""
+
     def __init__(self, conn: Neo4jDriver):
         self.conn = conn
 
-    def insert(self, obj: Neo4jNode) -> Optional[int]:
+    def create(self, label: str, obj: dict) -> Optional[int]:
         """Inserts a new object into the database"""
-        insert_labels = obj.labels
-        insert_properties = obj.properties
-        insert_query = (
-            f"CREATE (n:{insert_labels}) SET n = $props RETURN id(n)"
-        )
+        insert_query = f"CREATE (n:{label}) SET n = $props RETURN id(n)"
 
         with self.conn.session() as session:
             # TODO: Wait, can we just do this?
-            res = session.run(insert_query, kwparameters=insert_properties)
+            res = session.run(insert_query, parameters={"props": obj})
             res = res.single()
             if res:
-                return res[0]
+                return res[0]["id(n)"]
             else:
                 return None
+
+    def update(self, label: str, obj_id: int, obj: dict):
+        """
+        Performs an update on an object in the database
+
+        Notes:
+            This is not a true incremental update. It will overwrite the entire
+            object with the new object.
+        """
+        # TODO: Do a proper cypher update
+        # https://neo4j.com/developer/cypher/updating/#cypher-update
+        query_string = f"""
+        MATCH (n:{label})
+        WHERE id(n) = $obj_id
+        SET n = $new_data
+        """
+        with self.conn.session() as session:
+            session.run(
+                query_string, parameters={"obj_id": obj_id, "new_data": obj}
+            )
+
+    def delete(self, label: str, obj_id: int):
+        """Deletes an object from the database. This will delete all relationships"""
+        query_string = f"""
+        MATCH (n:{label})
+        WHERE id(n) = $obj_id
+        DETACH DELETE n
+        """
+        # TODO: We should probably raise an exception if the object doesn't exist?
+        with self.conn.session() as session:
+            session.run(query_string, parameters={"obj_id": obj_id})
 
 
 class Twig4jOrm:
@@ -58,6 +95,7 @@ class Twig4jOrm:
     def __init__(self, conn: Neo4jDriver):
         # Note: assumes that connection is already established!
         self.conn = conn
+        self.raw_backing = RawNeo4jBacking(conn)
 
     def get_all_projects(self) -> list[Project]:
         """
@@ -95,7 +133,7 @@ class Twig4jOrm:
             return return_val
 
     def get_projects_accessible_to_user(
-            self, user_id: UUID
+        self, user_id: UUID
     ) -> Optional[list[Project]]:
         """
         Retrieves all the projects accessible to a user. These projects can
@@ -192,19 +230,15 @@ class Twig4jOrm:
 
         Returns:
             The ID of the newly created project.
+
+        Raises:
+            CreationFailure: If the project could not be created.
         """
 
-        query_string = """
-        CREATE (p:project)
-        SET p = $project
-        RETURN id(p)
-        """
-        with self.conn.session() as sess:
-            result = sess.run(
-                query_string,
-                {"project": json.loads(project.json())},
-            )
-            return result.data()[0]["id(p)"]
+        out = self.raw_backing.create("project", json.loads(project.json()))
+        if out is None:
+            raise CreationFailure("Could not create project")
+        return ProjectId(out)
 
     def update_project(self, project_id: ProjectId, new_data: Project) -> None:
         """
@@ -226,21 +260,11 @@ class Twig4jOrm:
 
         # TODO: Do a proper cypher update
         # https://neo4j.com/developer/cypher/updating/#cypher-update
-        query_string = """
-        MATCH (p:project)
-        WHERE id(p) = $project_id
-        SET p = $new_data
-        """
-
-        with self.conn.session() as sess:
-            sess.run(
-                query_string,
-                {
-                    "project_id": project_id,
-                    "new_data": json.loads(new_data.json(exclude={"id",
-                                                                  "resources"})),
-                },
-            )
+        self.raw_backing.update(
+            "project",
+            project_id,
+            json.loads(new_data.json(exclude={"id", "resources"})),
+        )
 
     def delete_project(self, project_id: ProjectId) -> None:
         """
@@ -249,14 +273,7 @@ class Twig4jOrm:
         Args:
             project_id: The ID of the project to delete.
         """
-
-        query_string = """
-        MATCH (p:project)
-        WHERE id(p) = $project_id
-        DETACH DELETE p
-        """
-        with self.conn.session() as sess:
-            sess.run(query_string, {"project_id": project_id})
+        self.raw_backing.delete("project", project_id)
 
     def get_resources(self, project_id: ProjectId) -> Optional[ResourceGraph]:
         """
@@ -285,13 +302,16 @@ class Twig4jOrm:
         RETURN pr
         """
         with self.conn.session() as sess:
-            vertices = sess.run(vertices_query_string, {"project_id": project_id})
+            vertices = sess.run(
+                vertices_query_string, {"project_id": project_id}
+            )
             edges = sess.run(edges_query_string, {"project_id": project_id})
 
             # TODO: This dictionary comprehension should be hidden away in a converter
             vertex_set = {
-                ResourceId(vertex['r'].id): Resource(id=ResourceId(vertex['r'].id),
-                                                     **dict(vertex['r'].items()))
+                ResourceId(vertex["r"].id): Resource(
+                    id=ResourceId(vertex["r"].id), **dict(vertex["r"].items())
+                )
                 for vertex in vertices
             }
             if len(vertex_set) == 0:
@@ -299,14 +319,16 @@ class Twig4jOrm:
 
             # TODO: Hide this away too
             edge_set = {
-                (ResourceId(edge['pr'].start_node.id),
-                 ResourceId(edge['pr'].end_node.id)) for edge in edges
+                (
+                    ResourceId(edge["pr"].start_node.id),
+                    ResourceId(edge["pr"].end_node.id),
+                )
+                for edge in edges
             }
 
-            return_val = ResourceGraph.parse_obj({
-                "_vertices": vertex_set,
-                "edges": edge_set
-            })
+            return_val = ResourceGraph.parse_obj(
+                {"_vertices": vertex_set, "edges": edge_set}
+            )
             return return_val
 
     def get_resource(self, resource_id: ResourceId) -> Resource:
@@ -340,7 +362,7 @@ class Twig4jOrm:
                     raise
                 node = result["r"]
                 return Resource(id=node.id, **dict(node.items()))
-            except NotOneValueFound:
+            except executing.NotOneValueFound:
                 raise ResourceNotFound()
             except ResourceNotFound:
                 raise ResourceNotFound(
@@ -348,10 +370,10 @@ class Twig4jOrm:
                 )
 
     def create_resource(
-            self,
-            resource: Resource,
-            project_id: ProjectId,
-            relationships: Optional[ResourceRelationships] = None,
+        self,
+        resource: Resource,
+        project_id: ProjectId,
+        relationships: Optional[ResourceRelationships] = None,
     ) -> ResourceId:
         """
         Creates a new resource in Neo4j
@@ -374,7 +396,9 @@ class Twig4jOrm:
         """
 
         if relationships is not None:
-            raise NotImplementedError("Creating a resource with relationships is not yet implemented.")
+            raise NotImplementedError(
+                "Creating a resource with relationships is not yet implemented."
+            )
 
         # TODO: Should we check for duplicate resources? How should we do that anyway?
 
@@ -402,7 +426,7 @@ class Twig4jOrm:
                 )
 
     def update_resource(
-            self, resource_id: ResourceId, new_data: Resource
+        self, resource_id: ResourceId, new_data: Resource
     ) -> None:
         """
         Updates a resource in the database.
@@ -412,24 +436,13 @@ class Twig4jOrm:
             new_data: The new data to update the resource with.
 
         """
-        query_string = """
-        MATCH (r:resource)
-        WHERE id(r) = $resource_id
-        SET r = $new_data
-        """
+        self.raw_backing.update(
+            "resource", resource_id, json.loads(new_data.json(exclude={"id"}))
+        )
 
-        with self.conn.session() as sess:
-            sess.run(
-                query_string,
-                {
-                    "resource_id": resource_id,
-                    "new_data": json.loads(new_data.json(
-                        exclude={"id"}
-                    ))
-                },
-            )
-
-    def add_relationship(self, src: ResourceId, dst: ResourceId) -> RelationshipId:
+    def add_relationship(
+        self, src: ResourceId, dst: ResourceId
+    ) -> RelationshipId:
         """
         Adds a relationship between 2 resources.
         This is a directed edge from `src` to `dst`
@@ -468,12 +481,4 @@ class Twig4jOrm:
         Raises:
             :py:class:`ResourceNotFound` if the resource does not exist
         """
-
-        query_string = """
-        MATCH (r:resource)
-        WHERE id(r) = $resource_id
-        DETACH DELETE r
-        """
-        with self.conn.session() as sess:
-            results = sess.run(query_string, {"resource_id": resource_id})
-            # TODO: Can we assume that it succeeded?
+        self.raw_backing.delete("resource", resource_id)
