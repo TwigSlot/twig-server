@@ -5,12 +5,7 @@
 git clone https://github.com/twigslot/twig-server
 cd twig-server
 cp .env.example .env
-# make sure neo4j fully loaded before loading the rest, 
-# otherwise service "server" complains
-docker-compose up -d neo4j 
-docker-compose up logs -f neo4j 
-# after neo4j loaded you can bring up the rest
-docker-compose up -d 
+docker-compose up -d
 ```
 Note that building the images the first time takes longer, but after docker caches some image layers, the waiting time becomes more bearable.
 

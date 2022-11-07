@@ -1,19 +1,9 @@
+version: '3.7'
 networks:
   internal:
+volumes:
+  kratos-sqlite:
 services:
-  server:
-    depends_on:
-      - neo4j
-    build:
-      dockerfile: ./containers/flask/Dockerfile
-      context: .
-    image: twig_server:latest
-    dns:
-      - 8.8.8.8 # this solves networking issues
-    networks:
-      - internal
-    ports:
-      - "5000:5000"
   neo4j:
     image: neo4j:4.4.9
     ports:
@@ -29,13 +19,8 @@ services:
     environment:
       - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
     volumes:
-      - type: volume
-        source: kratos-sqlite
-        target: /var/lib/sqlite
-        read_only: false
-      - type: bind
-        source: ./containers/kratos
-        target: /etc/config/kratos
+      - kratos-sqlite:/var/lib/sqlite
+      - ./containers/kratos:/etc/config/kratos
     command: -c /etc/config/kratos/kratos.yml migrate sql -e --yes
     restart: on-failure
     networks:
@@ -52,13 +37,8 @@ services:
       - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
     command: serve -c /etc/config/kratos/kratos.yml --dev --watch-courier
     volumes:
-      - type: bind
-        source: ./containers/kratos
-        target: /etc/config/kratos
-      - type: volume
-        source: kratos-sqlite
-        target: /var/lib/sqlite
-        read_only: false
+      - kratos-sqlite:/var/lib/sqlite
+      - ./containers/kratos:/etc/config/kratos
     networks:
       - internal
   kratos-selfservice-ui-node:
@@ -81,5 +61,3 @@ services:
       - '4437:4437'
     networks:
       - internal
-volumes:
-  kratos-sqlite:
