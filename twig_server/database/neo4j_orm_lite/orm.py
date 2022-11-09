@@ -6,7 +6,7 @@ import executing
 from neo4j import Neo4jDriver
 from pydantic import BaseModel
 
-from twig_server.database.graph.twigslot_objects import (
+from twig_server.database.models.twigslot_objects import (
     Project,
     Resource,
     ProjectId,
@@ -40,10 +40,11 @@ class RawNeo4jBacking:
 
     def create(self, label: str, obj: dict) -> Optional[int]:
         """Inserts a new object into the database"""
+        # TODO: Is this necessarily safe? What if the object already exists?
         insert_query = f"CREATE (n:{label}) SET n = $props RETURN id(n)"
 
         with self.conn.session() as session:
-            # TODO: Wait, can we just do this?
+            # TODO: State assumptions?
             res = session.run(insert_query, parameters={"props": obj})
             res = res.single()
             if res:
@@ -152,6 +153,10 @@ class Twig4jOrm:
         Raises:
             Might raise if we could not connect to Neo4j, I suppose.
             TODO: Figure out when this raises
+
+        Notes:
+            This will NOT populate the project's resources.
+            TODO: We should make it easier to do that.
         """
 
         # TODO: Pull this from our permissions table
@@ -287,7 +292,7 @@ class Twig4jOrm:
         """
 
         # We need to pull out the relationships between the resources too
-        # so we can build the graph
+        # so we can build the models
 
         vertices_query_string = """
         MATCH (p:project)-[:has_resource]->(r:resource)
