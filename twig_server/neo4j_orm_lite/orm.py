@@ -1,9 +1,9 @@
+import enum
 import json
 import warnings
-from typing import Optional
+from typing import Optional, ClassVar, Generic, Type, Union
 from uuid import UUID
 
-import executing
 import neo4j.graph
 from neo4j import Neo4jDriver
 
@@ -14,17 +14,131 @@ from twig_server.models import (
     ResourceId,
     ResourceGraph,
     EdgeRelation,
+    Tag,
 )
 from twig_server.models.neo4j_specific import RelationshipId, Neo4jId
+from twig_server.models.types import VK
 from twig_server.neo4j_orm_lite.exceptions import (
     CreationFailure,
     ProjectNotFound,
-    ResourceNotFound,
 )
 
 
-class ObjectNotFound(Exception):
-    pass
+class Operation(enum.Enum):
+    CREATE = "CREATE"
+    READ = "READ"
+    UPDATE = "UPDATE"
+    DELETE = "DELETE"
+
+
+class CypherQueryString:
+    def __init__(
+        self,
+        operation: Operation,
+        *,
+        returned_idx_name: Optional[str] = None,
+        is_single: Optional[bool] = None,
+        required_parameters: Optional[list[str]] = None,
+        query_string: str,
+    ):
+        # TODO: Checks
+        self.operation = operation
+        self.required_parameters = required_parameters
+        self.query_string = query_string
+        self.is_single = is_single
+        self.returned_idx_name = returned_idx_name
+
+    def __str__(self):
+        return self.query_string
+
+    def execute(self, sess: neo4j.Session, parameters: Optional[dict] = None):
+        # performs validation as well
+        # Return the single thing if self.is_single otherwise it will return the result
+        if len(self.required_parameters) > 0 and parameters is None:
+            raise ValueError("Parameters are required for this query.")
+        if set(self.required_parameters) != set(parameters.keys()):
+            raise ValueError(
+                f"Parameters {parameters.keys()} do not match required parameters {self.required_parameters}"
+            )
+
+        result = sess.run(self.query_string, parameters)
+        if self.is_single:
+            result = result.single()
+            if not result:
+                raise Exception("A more concrete exception would be nice")
+            return result[0][self.returned_idx_name]
+        else:
+            return result
+
+
+class TwigNeoModel(Generic[VK]):
+    __label_name__: ClassVar[str]
+
+    # TODO: Figure out how to just execute it and not return query strings.
+    @classmethod
+    def get_all(cls) -> CypherQueryString:
+        return CypherQueryString(
+            Operation.READ,
+            returned_idx_name="n",
+            is_single=False,
+            query_string=f"MATCH (n:{cls.__label_name__}) RETURN n",
+        )
+
+    @classmethod
+    def get(cls, obj_id: int) -> CypherQueryString:
+        query_string = (
+            f"MATCH (n:{cls.__label_name__}) WHERE id(n)={obj_id} RETURN n"
+        )
+        return CypherQueryString(
+            Operation.READ,
+            returned_idx_name="n",
+            is_single=True,
+            query_string=query_string,
+        )
+
+    @classmethod
+    def create(cls):
+        query_string = (
+            f"CREATE (n:{cls.__label_name__}) SET n = $props RETURN id(n)"
+        )
+        return CypherQueryString(
+            Operation.CREATE,
+            returned_idx_name="id(n)",
+            is_single=True,
+            required_parameters=["props"],
+            query_string=query_string,
+        )
+
+    @classmethod
+    def update(cls):
+        # TODO: Do a proper cypher update.
+        # https://neo4j.com/developer/cypher/updating/#cypher-update
+        query_string = f"""
+        MATCH (n:{cls.__label_name__})
+        WHERE id(n)=$id
+        SET n = $props
+        RETURN id(n) 
+        """
+        return CypherQueryString(
+            Operation.UPDATE,
+            returned_idx_name="id(n)",
+            is_single=True,
+            required_parameters=["new_data"],
+            query_string=query_string,
+        )
+
+    @classmethod
+    def delete(cls):
+        query_string = f"""
+        MATCH (n:{cls.__label_name__})
+        WHERE id(n)=$id
+        DETACH DELETE n
+        """
+        return CypherQueryString(
+            Operation.DELETE,
+            required_parameters=["id"],
+            query_string=query_string,
+        )
 
 
 class CrappyNeo4jFakeOrm:
@@ -35,79 +149,6 @@ class CrappyNeo4jFakeOrm:
 
     def __init__(self, conn: Neo4jDriver):
         self.conn = conn
-
-    def create(self, label: str, obj: dict) -> Neo4jId:
-        """
-        Inserts a new object into the database
-
-        Raises:
-            CreationFailure if the returned object is None.
-        """
-        # TODO: Is this necessarily safe? What if the object already exists?
-        insert_query = f"CREATE (n:{label}) SET n = $props RETURN id(n)"
-
-        with self.conn.session() as session:
-            # TODO: State assumptions?
-            res = session.run(insert_query, parameters={"props": obj})
-            res = res.single()
-            if res:
-                return res[0]["id(n)"]
-            else:
-                raise CreationFailure(label, obj)
-
-    def update(self, label: str, obj_id: Neo4jId, obj: dict):
-        """
-        Performs an update on an object in the database
-
-        Notes:
-            This is not a true incremental update. It will overwrite the entire
-            object with the new object.
-        """
-        # TODO: Do a proper cypher update
-        # https://neo4j.com/developer/cypher/updating/#cypher-update
-        query_string = f"""
-        MATCH (n:{label})
-        WHERE id(n) = $obj_id
-        SET n = $new_data
-        """
-        # TODO: Check if it updated successfully?
-        with self.conn.session() as session:
-            session.run(
-                query_string, parameters={"obj_id": obj_id, "new_data": obj}
-            )
-
-    def delete(self, label: str, obj_id: Neo4jId):
-        """Deletes an object from the database. This will delete all relationships"""
-        query_string = f"""
-        MATCH (n:{label})
-        WHERE id(n) = $obj_id
-        DETACH DELETE n
-        """
-        # TODO: We should probably raise an exception if the object doesn't exist?
-        with self.conn.session() as session:
-            session.run(query_string, parameters={"obj_id": obj_id})
-
-    def get_by_label_and_id(
-        self, label: str, obj_id: Neo4jId
-    ) -> neo4j.graph.Node:
-        """
-        Retrieves an object from the database, by its label and ID
-
-        Raises:
-            ObjectNotFound: If the object is not found
-        """
-        query_string = f"""
-        MATCH (n:{label})
-        WHERE id(n) = $obj_id
-        RETURN n
-        """
-        with self.conn.session() as session:
-            res = session.run(query_string, parameters={"obj_id": obj_id})
-            res = res.single()
-            if res:
-                return res[0]["n"]
-            else:
-                raise ObjectNotFound
 
     def create_relationship(
         self,
@@ -139,7 +180,8 @@ class CrappyNeo4jFakeOrm:
         MATCH (src{':' + src_label if src_label else ''}),
         (dst{':' + dst_label if dst_label else ''})
         WHERE id(src) = $src_id AND id(dst) = $dst_id
-        CREATE (src)-[r{':' + relationship_label if relationship_label else None}]->(dst)
+        CREATE (src)-[r{':' + relationship_label if relationship_label else None}]->(
+        dst)
         RETURN id(r)
         """
         with self.conn.session() as sess:
@@ -174,40 +216,27 @@ class Twig4jOrm:
         self.conn = conn
         self.raw_backing = CrappyNeo4jFakeOrm(conn)
 
-    def get_all_projects(self) -> list[Project]:
-        """
-        Retrieves all the projects we currently have stored.
-
-        This is most useful for the "explore projects" page,
-        where we want to show all the projects we have.
-
-        Notes:
-            Not sure how awful the performance would be if we
-            do this, actually. We might want to paginate this.
-            TODO: Figure out if we need to paginate this.
-
-        Returns:
-            A list of projects will be returned if and only if
-            there are nonzero projects in the database.
-        """
-        query_string = """
-        MATCH (p:project)
-        RETURN p
-        """
+    def execute_and_convert(
+        self,
+        query_string: CypherQueryString,
+        desired_type: Union[Type[Project], Type[Resource], Type[Tag]],
+        parameters: Optional[dict] = None,
+    ) -> Union[
+        Union[Project, list[Project]],
+        Union[Resource, list[Resource]],
+        Union[Tag, list[Tag]],
+    ]:
         with self.conn.session() as sess:
-            results = sess.run(query_string)
-            return_val = list(
-                map(
-                    lambda record: Project(
-                        id=record["p"].id,
-                        # Note: record['p'].items() is a dict_keys
-                        # not a dict, so this is needed
-                        **dict(record["p"].items()),
-                    ),
-                    results,
-                )
-            )
-            return return_val
+            # TODO: Exception handling
+            result = query_string.execute(sess, parameters)
+            if query_string.is_single:
+                return desired_type(id=result.id, **dict(result.items()))
+            else:
+                ret_val = []
+                for record in result:
+                    n = record[query_string.returned_idx_name]
+                    ret_val.append(desired_type(id=n.id, **dict(n.items())))
+                return ret_val
 
     def get_projects_accessible_to_user(
         self, user_id: UUID
@@ -249,101 +278,15 @@ class Twig4jOrm:
         WHERE id(p) IN $projects_user_has_access_to
         RETURN p
         """
-        with self.conn.session() as sess:
-            results = sess.run(
-                query_string,
-                {"projects_user_has_access_to": projects_user_has_access_to},
-            )
-            # TODO: Check if this actually works
-            return_val = list(
-                map(
-                    # in particular, this line. What is `record`?
-                    lambda record: Project(**record),
-                    results,
-                )
-            )
-            return return_val if len(return_val) > 0 else None
-
-    def get_project(self, project_id: ProjectId) -> Project:
-        """
-        Retrieves a project by its neo4j ID.
-
-        Args:
-            project_id: The ID of the project to retrieve.
-
-        Returns:
-            The project
-
-        Raises:
-            If the project was not found
-
-        Notes:
-            The project returned by this will have `None` for its
-            resources. You will need to fill this in manually with
-            :py:meth:`Neo4jOrm.get_resources`.
-        """
-        try:
-            proj_obj = self.raw_backing.get_by_label_and_id(
-                "project", project_id
-            )
-            return Project(id=proj_obj.id, **dict(proj_obj.items()))
-        except ObjectNotFound:
-            raise ProjectNotFound(project_id)
-
-    def create_project(self, project: Project) -> ProjectId:
-        """
-        Creates a new project in the database.
-
-        Notes:
-            TODO: I should probably raise if the project already exists
-
-        Args:
-            project: The project to create.
-
-        Returns:
-            The ID of the newly created project.
-
-        Raises:
-            CreationFailure: If the project could not be created.
-        """
-
-        out = self.raw_backing.create("project", json.loads(project.json()))
-        return ProjectId(out)
-
-    def update_project(self, project_id: ProjectId, new_data: Project) -> None:
-        """
-        Updates a project in the database.
-
-        Args:
-            project_id: The ID of the project to update.
-            new_data: The new data to update the project with.
-
-        Notes:
-            This is extremely low level and will happily update the project even
-            if you change the following properties:
-            - owner
-
-        Notes:
-            You are expected to change your own modification_time.
-
-        """
-
-        # TODO: Do a proper cypher update
-        # https://neo4j.com/developer/cypher/updating/#cypher-update
-        self.raw_backing.update(
-            "project",
-            project_id,
-            json.loads(new_data.json(exclude={"id", "resources"})),
+        cq = CypherQueryString(
+            Operation.READ,
+            returned_idx_name="p",
+            is_single=False,
+            required_parameters=["projects_user_has_access_to"],
+            query_string=query_string,
         )
-
-    def delete_project(self, project_id: ProjectId) -> None:
-        """
-        Deletes a project from the database.
-
-        Args:
-            project_id: The ID of the project to delete.
-        """
-        self.raw_backing.delete("project", project_id)
+        ret_val = self.execute_and_convert(cq, Project)
+        return ret_val if len(ret_val) > 0 else None
 
     def get_resources(self, project_id: ProjectId) -> ResourceGraph:
         """
@@ -407,32 +350,6 @@ class Twig4jOrm:
             return_val = ResourceGraph(vertices=vertex_set, edges=edge_set)
             return return_val
 
-    def get_resource(self, resource_id: ResourceId) -> Resource:
-        """
-        Retrieves a resource with the id. This can retrieve a resource under any
-        project.
-
-        Args:
-            resource_id: The id of the resource
-
-        Returns:
-            The resource
-
-        Raises:
-            :py:class:`ResourceNotFound` if the resource does not exist
-
-        Notes:
-            This makes no guarantee that the resource has not changed since it was
-            retrieved. You could genuinely get a different resource with the same ID.
-        """
-        try:
-            resource_obj = self.raw_backing.get_by_label_and_id(
-                "resource", resource_id
-            )
-            return Resource(id=resource_obj.id, **dict(resource_obj.items()))
-        except ObjectNotFound:
-            raise ResourceNotFound(resource_id)
-
     def create_resource(
         self,
         resource: Resource,
@@ -489,21 +406,6 @@ class Twig4jOrm:
             else:
                 raise ProjectNotFound(project_id)
 
-    def update_resource(
-        self, resource_id: ResourceId, new_data: Resource
-    ) -> None:
-        """
-        Updates a resource in the database.
-
-        Args:
-            resource_id: The ID of the resource to update.
-            new_data: The new data to update the resource with.
-
-        """
-        self.raw_backing.update(
-            "resource", resource_id, json.loads(new_data.json(exclude={"id"}))
-        )
-
     def add_relationship(
         self, src: ResourceId, dst: ResourceId
     ) -> RelationshipId:
@@ -518,31 +420,14 @@ class Twig4jOrm:
         Returns:
             The ID of the relationship created
         """
-        query_string = """
-        MATCH (src:resource), (dst:resource)
-        WHERE id(src) = $src AND id(dst) = $dst
-        CREATE (src)-[rs:prereq]->(dst)
-        RETURN rs
-        """
-        with self.conn.session() as sess:
-            result = sess.run(query_string, {"src": src, "dst": dst})
-            if result:
-                return result.single()["rs"].id
+        rs_id = self.raw_backing.create_relationship(
+            src=src,
+            src_label="resource",
+            dst=dst,
+            dst_label="resource",
+            relationship_label="prereq",
+        )
+        return RelationshipId(rs_id)
 
     def add_multiple_relationships(self, relationships: EdgeRelation):
         raise NotImplementedError("Not implemented yet")
-
-    def delete_resource(self, resource_id: ResourceId):
-        """
-        Deletes a resource with id
-
-        Args:
-            resource_id: The id of the resource
-
-        Returns:
-            None
-
-        Raises:
-            :py:class:`ResourceNotFound` if the resource does not exist
-        """
-        self.raw_backing.delete("resource", resource_id)

@@ -32,9 +32,10 @@ from pydantic.color import Color
 
 from twig_server.models.db_objects import BaseTwigObject
 from twig_server.models.types import ResourceId, TagId, ProjectId
+from twig_server.neo4j_orm_lite.orm import TwigNeoModel
 
 
-class Resource(BaseTwigObject[ResourceId]):
+class Resource(BaseTwigObject[ResourceId], TwigNeoModel):
     """
     A TwigSlot Resource, usually a link to a webpage.
     However, could contain anything really.
