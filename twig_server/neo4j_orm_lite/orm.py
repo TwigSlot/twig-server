@@ -1,4 +1,5 @@
 import json
+import warnings
 from typing import Optional
 from uuid import UUID
 
@@ -36,7 +37,12 @@ class CrappyNeo4jFakeOrm:
         self.conn = conn
 
     def create(self, label: str, obj: dict) -> Neo4jId:
-        """Inserts a new object into the database"""
+        """
+        Inserts a new object into the database
+
+        Raises:
+            CreationFailure if the returned object is None.
+        """
         # TODO: Is this necessarily safe? What if the object already exists?
         insert_query = f"CREATE (n:{label}) SET n = $props RETURN id(n)"
 
@@ -64,6 +70,7 @@ class CrappyNeo4jFakeOrm:
         WHERE id(n) = $obj_id
         SET n = $new_data
         """
+        # TODO: Check if it updated successfully?
         with self.conn.session() as session:
             session.run(
                 query_string, parameters={"obj_id": obj_id, "new_data": obj}
@@ -101,6 +108,37 @@ class CrappyNeo4jFakeOrm:
                 return res[0]["n"]
             else:
                 raise ObjectNotFound
+
+    def create_relationship(
+        self,
+        src: Neo4jId,
+        src_label: str,
+        dst: Neo4jId,
+        dst_label: str,
+        relationship_label: str,
+    ) -> Neo4jId:
+        query_string = f"""
+        MATCH (src{':' + src_label if src_label else ''}),
+        (dst{':' + dst_label if dst_label else ''})
+        WHERE id(src) = $src_id AND id(dst) = $dst_id
+        CREATE (src)-[r{':' + relationship_label if relationship_label else None}]->(dst)
+        RETURN id(r)
+        """
+        with self.conn.session() as sess:
+            result = sess.run(query_string, {"src": src, "dst": dst})
+            result = result.single()
+            if result:
+                return result[0]["id(r)"]
+            else:
+                raise CreationFailure(
+                    relationship_label,
+                    {
+                        "src": src,
+                        "src_label": src_label,
+                        "dst": dst,
+                        "dst_label": dst_label,
+                    },
+                )
 
 
 class Twig4jOrm:
@@ -207,7 +245,7 @@ class Twig4jOrm:
             )
             return return_val if len(return_val) > 0 else None
 
-    def get_project(self, project_id: ProjectId) -> Optional[Project]:
+    def get_project(self, project_id: ProjectId) -> Project:
         """
         Retrieves a project by its neo4j ID.
 
@@ -215,32 +253,23 @@ class Twig4jOrm:
             project_id: The ID of the project to retrieve.
 
         Returns:
-            The project if it exists, None otherwise.
+            The project
+
+        Raises:
+            If the project was not found
 
         Notes:
             The project returned by this will have `None` for its
             resources. You will need to fill this in manually with
             :py:meth:`Neo4jOrm.get_resources`.
         """
-        # TODO: There is some duplication here, this can probably be combined with
-        # get_projects_accessible_to_user
-        query_string = """
-        MATCH (p:project)
-        WHERE id(p) = $project_id
-        RETURN p
-        """
-        with self.conn.session() as sess:
-            result = sess.run(query_string, {"project_id": project_id})
-            # Note: We are assuming that the result is certainly a single object
-            # If you see a warning, it sounds like a neo4j bug, since the id
-            # should be a unique mapping to a single neo4j node
-            result = result.single()[0]
-
-            return (
-                Project(id=result.id, **dict(result.items()))
-                if result
-                else None
+        try:
+            proj_obj = self.raw_backing.get_by_label_and_id(
+                "project", project_id
             )
+            return Project(id=proj_obj.id, **dict(proj_obj.items()))
+        except ObjectNotFound:
+            raise ProjectNotFound(project_id)
 
     def create_project(self, project: Project) -> ProjectId:
         """
@@ -260,8 +289,6 @@ class Twig4jOrm:
         """
 
         out = self.raw_backing.create("project", json.loads(project.json()))
-        if out is None:
-            raise CreationFailure("Could not create project")
         return ProjectId(out)
 
     def update_project(self, project_id: ProjectId, new_data: Project) -> None:
@@ -299,7 +326,7 @@ class Twig4jOrm:
         """
         self.raw_backing.delete("project", project_id)
 
-    def get_resources(self, project_id: ProjectId) -> Optional[ResourceGraph]:
+    def get_resources(self, project_id: ProjectId) -> ResourceGraph:
         """
         Retrieves all the resources in a project.
 
@@ -307,11 +334,17 @@ class Twig4jOrm:
             project_id: The ID of the project to retrieve resources from.
 
         Returns:
-            A ResourceGraph object if the project exists, None otherwise.
+            A ResourceGraph object
+
+        Raises:
+            ProjectNotFound: If the project was not found.
         """
 
         # We need to pull out the relationships between the resources too
         # so we can build the models
+
+        # TODO: Check if the project exists.
+        #  Is there any way to do this in a SINGLE query?
 
         vertices_query_string = """
         MATCH (p:project)-[:has_resource]->(r:resource)
@@ -339,7 +372,9 @@ class Twig4jOrm:
                 for vertex in vertices
             }
             if len(vertex_set) == 0:
-                return None
+                warnings.warn(
+                    "Refactor the Graph type to support empty graphs properly"
+                )
 
             # TODO: Hide this away too
             edge_set = {
@@ -403,14 +438,16 @@ class Twig4jOrm:
         Notes:
             This method implicitly assumes that the user has
             access to the project. It does not check this.
+
+        Notes:
+            This will not try to stop you from inserting a duplicate resource.
+            If you need to handle this, handle it at the API side.
         """
 
         if relationships is not None:
             raise NotImplementedError(
                 "Creating a resource with relationships is not yet implemented."
             )
-
-        # TODO: Should we check for duplicate resources? How should we do that anyway?
 
         query_string = """
         MATCH (p:project)
@@ -431,9 +468,7 @@ class Twig4jOrm:
             if result:
                 return result["id(r)"]
             else:
-                raise ProjectNotFound(
-                    project_id
-                )
+                raise ProjectNotFound(project_id)
 
     def update_resource(
         self, resource_id: ResourceId, new_data: Resource

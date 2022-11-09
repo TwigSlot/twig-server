@@ -2,6 +2,7 @@ from twig_server.models import ResourceId, ProjectId
 
 
 class CreationFailure(Exception):
+    """Raised when an object fails to be created in the database."""
     def __init__(self, label: str, obj: object):
         self.label = label
         self.obj = obj
