@@ -117,6 +117,24 @@ class CrappyNeo4jFakeOrm:
         dst_label: str,
         relationship_label: str,
     ) -> Neo4jId:
+        """
+        Constructs a directed relationship or edge between 2 vertices.
+
+        TODO: Do we really need the label if we are using the ID?
+
+        Args:
+            src: The ID of the source vertex
+            src_label: The label of the source vertex
+            dst: The ID of the destination vertex
+            dst_label: The label of the destination vertex
+            relationship_label: The label of the relationship
+
+        Returns:
+            The ID of the relationship
+
+        Raises:
+            CreationFailure: If the relationship could not be created
+        """
         query_string = f"""
         MATCH (src{':' + src_label if src_label else ''}),
         (dst{':' + dst_label if dst_label else ''})
@@ -127,6 +145,7 @@ class CrappyNeo4jFakeOrm:
         with self.conn.session() as sess:
             result = sess.run(query_string, {"src": src, "dst": dst})
             result = result.single()
+            # TODO: Does this check actually work?
             if result:
                 return result[0]["id(r)"]
             else:
