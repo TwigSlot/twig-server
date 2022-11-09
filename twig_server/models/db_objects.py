@@ -3,6 +3,7 @@ Contains lower-level DB objects. These are not really types, since
 we are subclassing this for things we insert into the database.
 """
 import datetime
+import json
 from typing import Optional, Generic
 
 from pydantic import BaseModel, validator, Field
@@ -41,6 +42,9 @@ class BaseDbObject(Generic[VK], BaseModel):
         json_encoders = {
             datetime: lambda dt: dt.timestamp()
         }
+
+    def serialize_for_neo4j_insert(self):
+        return json.loads(self.json(exclude={"id"}))
 
 
 class BaseTwigObject(BaseDbObject[VK]):

@@ -35,7 +35,7 @@ from twig_server.models.types import ResourceId, TagId, ProjectId
 from twig_server.neo4j_orm_lite.orm import TwigNeoModel
 
 
-class Resource(BaseTwigObject[ResourceId], TwigNeoModel):
+class Resource(BaseTwigObject[ResourceId], TwigNeoModel[TagId]):
     """
     A TwigSlot Resource, usually a link to a webpage.
     However, could contain anything really.
@@ -46,7 +46,7 @@ class Resource(BaseTwigObject[ResourceId], TwigNeoModel):
          - The description of the resource was changed
          - The url of the resource was changed
     """
-
+    __label_name__ = "resource"
     # URL of the resource
     url: Optional[str]
 
@@ -57,17 +57,17 @@ class Resource(BaseTwigObject[ResourceId], TwigNeoModel):
         return v
 
 
-class Tag(BaseTwigObject[TagId]):
+class Tag(BaseTwigObject[TagId], TwigNeoModel[TagId]):
     """
     Tags which can be applied to Resources.
     They sort of behave like Finder tags.
     """
-
+    __label_name__ = "tag"
     # Tags have a color to make them nice and pretty!
     color: Color = Field(...)
 
 
-class Project(BaseTwigObject[ProjectId]):
+class Project(BaseTwigObject[ProjectId], TwigNeoModel[ProjectId]):
     """
     Internal Representation of a TwigSlot Project
 
@@ -80,7 +80,7 @@ class Project(BaseTwigObject[ProjectId]):
          - ok wow, in hindsight, maybe we should track modifications somewhere else.
          TODO: so we should log every modification, yeah?
     """
-
+    __label_name__ = "project"
     # The ID of the user who owns this project.
     owner: uuid.UUID
 

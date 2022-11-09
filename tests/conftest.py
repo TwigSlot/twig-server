@@ -1,18 +1,16 @@
-import pytest
-from dotenv import load_dotenv
-from twig_server.app import create_app
-from flask import current_app
 import os
 
-from twig_server.database.User import User
+import pytest
+from dotenv import load_dotenv
 
 if (
-    os.getenv("_PYTEST_RAISE", "0") != "0"
+        os.getenv("_PYTEST_RAISE", "0") != "0"
 ):  # for pytest debugging to work, do not execute in vscode! use launch.json instead
 
     @pytest.hookimpl(tryfirst=True)
     def pytest_exception_interact(call):
         raise call.excinfo.value
+
 
     @pytest.hookimpl(tryfirst=True)
     def pytest_internalerror(excinfo):
@@ -25,27 +23,20 @@ def load_env():
 
 
 @pytest.fixture(scope="session")
-def app():
-    app = create_app({"TESTING": True})
-    return app
+def neo4j_server():
+    from neo4j import GraphDatabase
+
+    # TODO: Make this less hardcoded
+    # TODO: This can't be parallelized!
+    driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "notneo4j"))
+    if driver.verify_connectivity():
+        return driver
+    else:
+        raise RuntimeError("Cannot connect to neo4j server")
 
 
 @pytest.fixture(scope="session")
-def connection(app):
-    with app.app_context():
-        assert current_app.config["driver"] != None
-        yield current_app.config["driver"]
-        current_app.config["driver"].close()
+def twig4j_orm(neo4j_server):
+    from twig_server.neo4j_orm_lite.executor import Twig4jOrm
 
-
-@pytest.fixture(scope="session")
-def create_user_username(connection):
-    jh = User(connection, username="jh")  # creating a user needs a username
-    assert jh != None
-    assert jh.db_obj == None
-    db_obj = jh.create()
-    assert db_obj != None
-    assert jh.db_obj != None
-    assert db_obj == jh.db_obj
-    yield jh
-    jh.delete()
+    return Twig4jOrm(neo4j_server)

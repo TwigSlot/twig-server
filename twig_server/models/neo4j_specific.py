@@ -1,8 +1,4 @@
 """Some neo4j specific implementation details."""
-from typing import Optional
-
-from twig_server.models import EdgeRelation
-from twig_server.models.types import VK
 
 
 class Neo4jId(int):
@@ -24,5 +20,5 @@ class RelationshipId(int):
     pass
 
 
-class Neo4jRelationship(EdgeRelation[VK]):
-    id: Optional[RelationshipId]
+# class Neo4jRelationship(EdgeRelation[VK]):
+#     id: Optional[RelationshipId]
