@@ -3,42 +3,39 @@ from typing import Optional
 from uuid import UUID
 
 import executing
+import neo4j.graph
 from neo4j import Neo4jDriver
-from pydantic import BaseModel
 
-from twig_server.database.models.twigslot_objects import (
+from twig_server.models import (
     Project,
     Resource,
     ProjectId,
     ResourceId,
-    ResourceRelationships,
     ResourceGraph,
-    RelationshipId,
+    EdgeRelation,
+)
+from twig_server.models.neo4j_specific import RelationshipId, Neo4jId
+from twig_server.neo4j_orm_lite.exceptions import (
+    CreationFailure,
+    ProjectNotFound,
+    ResourceNotFound,
 )
 
 
-# TODO: Move exceptions into another file
-
-
-class CreationFailure(Exception):
+class ObjectNotFound(Exception):
     pass
 
 
-class ResourceNotFound(Exception):
-    pass
-
-
-class ProjectNotFound(Exception):
-    pass
-
-
-class RawNeo4jBacking:
-    """Some low level functions for *most* C, U, D operations"""
+class CrappyNeo4jFakeOrm:
+    """
+    A fake and crappy Neo4j psuedo-ORM
+    This provides some low level functions for *most* create, update, delete operations
+    """
 
     def __init__(self, conn: Neo4jDriver):
         self.conn = conn
 
-    def create(self, label: str, obj: dict) -> Optional[int]:
+    def create(self, label: str, obj: dict) -> Neo4jId:
         """Inserts a new object into the database"""
         # TODO: Is this necessarily safe? What if the object already exists?
         insert_query = f"CREATE (n:{label}) SET n = $props RETURN id(n)"
@@ -50,9 +47,9 @@ class RawNeo4jBacking:
             if res:
                 return res[0]["id(n)"]
             else:
-                return None
+                raise CreationFailure(label, obj)
 
-    def update(self, label: str, obj_id: int, obj: dict):
+    def update(self, label: str, obj_id: Neo4jId, obj: dict):
         """
         Performs an update on an object in the database
 
@@ -72,7 +69,7 @@ class RawNeo4jBacking:
                 query_string, parameters={"obj_id": obj_id, "new_data": obj}
             )
 
-    def delete(self, label: str, obj_id: int):
+    def delete(self, label: str, obj_id: Neo4jId):
         """Deletes an object from the database. This will delete all relationships"""
         query_string = f"""
         MATCH (n:{label})
@@ -82,6 +79,28 @@ class RawNeo4jBacking:
         # TODO: We should probably raise an exception if the object doesn't exist?
         with self.conn.session() as session:
             session.run(query_string, parameters={"obj_id": obj_id})
+
+    def get_by_label_and_id(
+        self, label: str, obj_id: Neo4jId
+    ) -> neo4j.graph.Node:
+        """
+        Retrieves an object from the database, by its label and ID
+
+        Raises:
+            ObjectNotFound: If the object is not found
+        """
+        query_string = f"""
+        MATCH (n:{label})
+        WHERE id(n) = $obj_id
+        RETURN n
+        """
+        with self.conn.session() as session:
+            res = session.run(query_string, parameters={"obj_id": obj_id})
+            res = res.single()
+            if res:
+                return res[0]["n"]
+            else:
+                raise ObjectNotFound
 
 
 class Twig4jOrm:
@@ -96,7 +115,7 @@ class Twig4jOrm:
     def __init__(self, conn: Neo4jDriver):
         # Note: assumes that connection is already established!
         self.conn = conn
-        self.raw_backing = RawNeo4jBacking(conn)
+        self.raw_backing = CrappyNeo4jFakeOrm(conn)
 
     def get_all_projects(self) -> list[Project]:
         """
@@ -331,9 +350,7 @@ class Twig4jOrm:
                 for edge in edges
             }
 
-            return_val = ResourceGraph.parse_obj(
-                {"_vertices": vertex_set, "edges": edge_set}
-            )
+            return_val = ResourceGraph(vertices=vertex_set, edges=edge_set)
             return return_val
 
     def get_resource(self, resource_id: ResourceId) -> Resource:
@@ -354,31 +371,19 @@ class Twig4jOrm:
             This makes no guarantee that the resource has not changed since it was
             retrieved. You could genuinely get a different resource with the same ID.
         """
-        query_string = """
-        MATCH (r:resource)
-        WHERE id(r) = $resource_id
-        RETURN r
-        """
-        with self.conn.session() as sess:
-            results = sess.run(query_string, {"resource_id": resource_id})
-            try:
-                result = results.single()
-                if result is None:
-                    raise
-                node = result["r"]
-                return Resource(id=node.id, **dict(node.items()))
-            except executing.NotOneValueFound:
-                raise ResourceNotFound()
-            except ResourceNotFound:
-                raise ResourceNotFound(
-                    f"Resource with id {resource_id} does not exist"
-                )
+        try:
+            resource_obj = self.raw_backing.get_by_label_and_id(
+                "resource", resource_id
+            )
+            return Resource(id=resource_obj.id, **dict(resource_obj.items()))
+        except ObjectNotFound:
+            raise ResourceNotFound(resource_id)
 
     def create_resource(
         self,
         resource: Resource,
         project_id: ProjectId,
-        relationships: Optional[ResourceRelationships] = None,
+        relationships: Optional[EdgeRelation] = None,
     ) -> ResourceId:
         """
         Creates a new resource in Neo4j
@@ -427,7 +432,7 @@ class Twig4jOrm:
                 return result["id(r)"]
             else:
                 raise ProjectNotFound(
-                    f"Project with id {project_id} does not exist"
+                    project_id
                 )
 
     def update_resource(
@@ -470,7 +475,7 @@ class Twig4jOrm:
             if result:
                 return result.single()["rs"].id
 
-    def add_multiple_relationships(self, relationships: ResourceRelationships):
+    def add_multiple_relationships(self, relationships: EdgeRelation):
         raise NotImplementedError("Not implemented yet")
 
     def delete_resource(self, resource_id: ResourceId):

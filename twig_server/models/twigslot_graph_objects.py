@@ -1,7 +1,6 @@
-from twig_server.database.Project import Project
-from twig_server.database.Resource import Resource
-from twig_server.database.Tag import Tag
-from twig_server.database.models.types import (
+"""Objects that model graphs in TwigSlot."""
+from twig_server.models.twigslot_objects import Project, Resource, Tag
+from twig_server.models.types import (
     Graph,
     ResourceId,
     ProjectId,

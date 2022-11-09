@@ -1,5 +1,5 @@
 """
-Contains basic DB objects. These are not really types, since
+Contains lower-level DB objects. These are not really types, since
 we are subclassing this for things we insert into the database.
 """
 import datetime
@@ -7,7 +7,7 @@ from typing import Optional, Generic
 
 from pydantic import BaseModel, validator, Field
 
-from twig_server.database.models.types import VK
+from twig_server.models.types import VK
 
 
 class BaseDbObject(Generic[VK], BaseModel):
@@ -22,7 +22,7 @@ class BaseDbObject(Generic[VK], BaseModel):
      the database
     """
     # Unique identifier for this resource object
-    # Note: This is the Neo4j UID. Please DO NOT MANUALLY FILL THIS FIELD IN!
+    # Note: This should not be manually filled in, as it will be assigned by the db.
     id: Optional[VK] = Field(None, allow_mutation=False)
 
     # Time that this thing was created in the database in UTC.

@@ -7,8 +7,10 @@ from typing import TypeVar, Generic, Union
 
 from pydantic import BaseModel
 
+from twig_server.models.neo4j_specific import Neo4jId
 
-class ResourceId(int):
+
+class ResourceId(Neo4jId):
     """
     A model for the ID of a resource
 
@@ -21,7 +23,7 @@ class ResourceId(int):
     pass
 
 
-class ProjectId(int):
+class ProjectId(Neo4jId):
     """
     A model for the ID of a project.
 
@@ -33,19 +35,7 @@ class ProjectId(int):
     pass
 
 
-class RelationshipId(int):
-    """
-    A model for the ID of a relationship.
-
-    Notes:
-        Unfortunately, there is no way for us to validate that you did not pass
-        in something that is not a relationship ID. So, please, don't.
-    """
-
-    pass
-
-
-class TagId(int):
+class TagId(Neo4jId):
     """
     A Model for the ID of a tag.
 
@@ -58,7 +48,7 @@ class TagId(int):
 
 
 """The vertex key."""
-VK = TypeVar("VK", bound=Union[ResourceId, ProjectId, RelationshipId])
+VK = TypeVar("VK", bound=Union[ResourceId, ProjectId, TagId])
 """The actual rich object which is mapped to by the vertex key"""
 VO = TypeVar("VO", bound=object)
 

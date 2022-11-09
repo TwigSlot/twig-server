@@ -24,15 +24,14 @@ Notes:
     If Q is true, then you know certainly P is true.
 
 """
-import datetime
 import uuid
-from typing import Optional, Generic
+from typing import Optional
 
 from pydantic import BaseModel, validator, Field
 from pydantic.color import Color
 
-from twig_server.database.models.db_objects import BaseTwigObject
-from twig_server.database.models.types import ResourceId, TagId, ProjectId, VK
+from twig_server.models.db_objects import BaseTwigObject
+from twig_server.models.types import ResourceId, TagId, ProjectId
 
 
 class Resource(BaseTwigObject[ResourceId]):
