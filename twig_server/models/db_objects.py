@@ -75,3 +75,10 @@ class BaseTwigObject(BaseDbObject[VK]):
         if v == "":
             raise ValueError("description should not be an empty string")
         return v
+
+    def add_relationship(self, other: VK):
+        """
+        Adds a directed edge going from this resource to the destination resource.
+        """
+        # TODO: This will be quite useful, actually.
+        raise NotImplementedError("Not done yet")

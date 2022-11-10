@@ -1,8 +1,9 @@
 import enum
 from typing import Optional, ClassVar, Generic
 
-import neo4j.graph
+import neo4j
 
+from twig_server.models.db_objects import BaseDbObject
 from twig_server.models.types import VK
 
 
@@ -15,13 +16,13 @@ class Operation(enum.Enum):
 
 class CypherQueryString:
     def __init__(
-        self,
-        operation: Operation,
-        *,
-        returned_idx_name: Optional[str] = None,
-        is_single: Optional[bool] = None,
-        required_parameters: Optional[list[str]] = None,
-        query_string: str,
+            self,
+            operation: Operation,
+            *,
+            returned_idx_name: Optional[str] = None,
+            is_single: Optional[bool] = None,
+            required_parameters: Optional[list[str]] = None,
+            query_string: str,
     ):
         # TODO: Checks
         self.operation = operation
@@ -54,6 +55,23 @@ class CypherQueryString:
             return result[self.returned_idx_name]
         else:
             return result
+
+
+class CypherQuery:
+    def __init__(self, query_string: CypherQueryString, obj: BaseDbObject):
+        self.query_string = query_string
+        self.obj = obj
+
+    def execute(self, sess: neo4j.Session, parameters: Optional[dict] = None) -> M:
+        result = self.query_string.execute(sess, parameters)
+        if self.query_string.is_single:
+            return self.desired_type(id=result.id, **dict(result.items()))
+        else:
+            ret_val = []
+            for record in result:
+                n = record[self.query_string.returned_idx_name]
+                ret_val.append(self.desired_type(id=n.id, **dict(n.items())))
+            return ret_val
 
 
 class TwigNeoModel(Generic[VK]):
@@ -135,3 +153,52 @@ class TwigNeoModel(Generic[VK]):
         )
 
 
+class TwigORMSession:
+    """
+    Examples:
+        >>> import uuid
+        >>> import neo4j
+        >>> from twig_server.models import Project, Resource, Tag
+        >>> driver = neo4j.GraphDatabase.driver("bolt://localhost:7687",
+        auth=("neo4j", "notneo4j"))
+        >>> with TwigORMSession(driver) as sess:
+        >>>    proj = Project(name="Test Project",
+        >>>                      description="Test Description",
+        >>>                      owner=uuid.uuid4())
+        >>>    rsrc1 = Resource(name="Test Resource 1",
+        >>>                     description="Test Description 1",
+        >>>                     url="https://www.google.com")
+        >>>    rsrc2 = Resource(name="Test Resource 2",
+        >>>                     description="Test Description 2",
+        >>>                     url="https://www.google.com")
+        >>>    rsrc1.add_
+        >>>    sess.add(proj)
+        >>>    sess.commit()
+    """
+    def __init__(self, driver: neo4j.Neo4jDriver):
+        self.driver = driver
+
+    def __enter__(self):
+        self.session = self.driver.session()
+        return self.session
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.session.close()
+
+    def execute(self, query: CypherQueryString):
+        pass
+
+    def add(self, obj: BaseDbObject):
+        pass
+
+    def add_all(self, objs: list[BaseDbObject]):
+        pass
+
+    def show_query(self) -> str:
+        """
+        Shows the query string that will be executed
+
+        Returns:
+            str: The query string that will be executed
+        """
+        pass

@@ -36,7 +36,7 @@ def neo4j_server():
 
 
 @pytest.fixture(scope="session")
-def twig4j_orm(neo4j_server):
-    from twig_server.neo4j_orm_lite.executor import Twig4jOrm
+def bad_orm(neo4j_server):
+    from twig_server.neo4j_orm_lite.executor import BadOrm
 
-    return Twig4jOrm(neo4j_server)
+    return BadOrm(neo4j_server)

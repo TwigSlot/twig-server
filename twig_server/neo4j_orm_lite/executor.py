@@ -82,7 +82,7 @@ class CrappyNeo4jFakeOrm:
                 )
 
 
-class Twig4jOrm:
+class BadOrm:
     """
     A simple Neo4j ORM for Twig.
 
@@ -299,6 +299,8 @@ class Twig4jOrm:
 
         Returns:
             The ID of the relationship created
+
+        TODO: Remove this thing
         """
         rs_id = self.raw_backing.create_relationship(
             src=src,
@@ -310,4 +312,5 @@ class Twig4jOrm:
         return RelationshipId(rs_id)
 
     def add_multiple_relationships(self, relationships: EdgeRelation):
+        # TODO: Delete this
         raise NotImplementedError("Not implemented yet")

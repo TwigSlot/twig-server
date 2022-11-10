@@ -30,9 +30,21 @@ from typing import Optional
 from pydantic import BaseModel, validator, Field
 from pydantic.color import Color
 
+from twig_server.models import ResourceGraph
 from twig_server.models.db_objects import BaseTwigObject
 from twig_server.models.types import ResourceId, TagId, ProjectId
 from twig_server.neo4j_orm_lite.orm import TwigNeoModel
+
+
+class Tag(BaseTwigObject[TagId], TwigNeoModel[TagId]):
+    """
+    Tags which can be applied to Resources.
+    They sort of behave like Finder tags.
+    """
+
+    __label_name__ = "tag"
+    # Tags have a color to make them nice and pretty!
+    color: Color = Field(...)
 
 
 class Resource(BaseTwigObject[ResourceId], TwigNeoModel[TagId]):
@@ -46,6 +58,7 @@ class Resource(BaseTwigObject[ResourceId], TwigNeoModel[TagId]):
          - The description of the resource was changed
          - The url of the resource was changed
     """
+
     __label_name__ = "resource"
     # URL of the resource
     url: Optional[str]
@@ -56,15 +69,12 @@ class Resource(BaseTwigObject[ResourceId], TwigNeoModel[TagId]):
             raise ValueError("url should not be an empty string")
         return v
 
-
-class Tag(BaseTwigObject[TagId], TwigNeoModel[TagId]):
-    """
-    Tags which can be applied to Resources.
-    They sort of behave like Finder tags.
-    """
-    __label_name__ = "tag"
-    # Tags have a color to make them nice and pretty!
-    color: Color = Field(...)
+    def add_tag(self, tag: Tag):
+        """
+        Adds a tag to this resource.
+        """
+        # TODO: This nice interface
+        raise NotImplementedError("Not done yet")
 
 
 class Project(BaseTwigObject[ProjectId], TwigNeoModel[ProjectId]):
@@ -80,15 +90,72 @@ class Project(BaseTwigObject[ProjectId], TwigNeoModel[ProjectId]):
          - ok wow, in hindsight, maybe we should track modifications somewhere else.
          TODO: so we should log every modification, yeah?
     """
+
     __label_name__ = "project"
     # The ID of the user who owns this project.
     owner: uuid.UUID
 
-    # A list of resources this project contains.
-    # Note: This is not meant to be filled in manually.
-    # TODO: Investigate whether we should leave this as a computed property or remove it
-    #  altogether.
-    # resources: Optional[ResourceGraph]
+    resources: Optional[ResourceGraph]
+
+    def add_resource(self, resource: Resource):
+        """
+        Adds a resource to this project. The resource need not exist in
+        the database yet.
+
+        Args:
+            resource: The resource to add.
+
+        Returns:
+            None
+        """
+        # TODO: This nice interface to add resources.
+        # Try to handle for both when the project is newly created and has no ID
+        # and when the project was pulled from a database.
+        # Consider: project does not have an ID (newly created)
+        # project does have an ID (from DB)
+
+        # consider: resource does not have an ID (newly created)
+        # resource does have an ID (from DB) - should we reject it?
+        raise NotImplementedError("Still TODO")
+
+    def add_resources(self, resources: list[Resource]):
+        """
+        Adds multiple resources to the project.
+
+        Args:
+            resources: The resources to add to the project.
+
+        Returns:
+            None
+        """
+        raise NotImplementedError("Not done yet")
+
+    def add_resource_graph(self, graph: ResourceGraph):
+        """
+        Adds multiple resources in a graph to the project
+
+        Args:
+            graph: The resource graph to add.
+
+        Returns:
+            None
+        """
+        # TODO: Do we need this?
+        raise NotImplementedError("Not done yet")
+
+    def add_tag(self, tag: Tag):
+        """
+        Adds a tag to this project. If the tag does not exist in the database,
+        it will be created upon commit.
+
+        Args:
+            tag: The tag to add to the project.
+
+        Returns:
+            None
+        """
+        # TODO: This nice interface to add tags.
+        pass
 
 
 class ProjectDisplaySettings(BaseModel):
