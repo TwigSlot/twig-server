@@ -8,3 +8,5 @@ Goals:
 """
 
 __version__ = "0.0.0-dev"
+
+from twig_server.neo4j_orm_lite.orm import TwigORMSession, TwigNeoModel

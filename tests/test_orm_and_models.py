@@ -16,21 +16,12 @@ from twig_server.neo4j_orm_lite.orm import TwigORMSession
         for n in range(10)
     ],
 )
-def test_create_project(bad_orm, name, description, owner):
-    proj = Project(name=name, description=description, owner=owner)
-    create_query = proj.create()
-    with bad_orm.conn.session() as sess:
-        proj_id = create_query.execute(
-            sess, {"props": proj.serialize_for_neo4j_insert()}
-        )
-        assert proj_id
-
-    get_query = proj.get(proj_id)
-    proj_get = bad_orm.execute_and_convert(get_query, Project)
-    assert (
-        proj_get.serialize_for_neo4j_insert()
-        == proj.serialize_for_neo4j_insert()
-    )
+def test_create_project(neo4j_server, name, description, owner):
+    with TwigORMSession(neo4j_server) as sess:
+        proj = Project(name=name, description=description, owner=owner)
+        sess.add(proj)
+        print(sess.show_query())
+        sess.commit()
     #
     # del_query = proj.delete()
     # with twig4j_orm.conn.session() as sess:

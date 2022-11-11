@@ -33,10 +33,3 @@ def neo4j_server():
         return driver
     else:
         raise RuntimeError("Cannot connect to neo4j server")
-
-
-@pytest.fixture(scope="session")
-def bad_orm(neo4j_server):
-    from twig_server.neo4j_orm_lite.executor import BadOrm
-
-    return BadOrm(neo4j_server)

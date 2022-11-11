@@ -9,9 +9,11 @@ from typing import Optional, Generic
 from pydantic import BaseModel, validator, Field
 
 from twig_server.models.types import VK
+from twig_server.neo4j_orm_lite.orm import TwigNeoModel
+from twig_server.neo4j_orm_lite.query import PreparedCypherQuery
 
 
-class BaseDbObject(Generic[VK], BaseModel):
+class BaseDbObject(Generic[VK], BaseModel, TwigNeoModel):
     """
     A base object to build upon. Inherit this if you are writing
     a model that needs to be inserted into our graph database. This contains some
@@ -59,6 +61,62 @@ class BaseDbObject(Generic[VK], BaseModel):
         """
         return json.loads(self.json(exclude={"id"}))
 
+    def create(self) -> PreparedCypherQuery:
+        """
+        Creates this object in the database.
+
+        Raises:
+            If the object is already in the database (i.e. it has an ID)
+        """
+        if self.id:
+            # TODO: change this exception type
+            raise Exception(
+                "Cannot create an object that is already in the database (this object "
+                "has an ID)")
+        pq = PreparedCypherQuery(self._create_query_str(), {
+            "props": self.serialize_for_neo4j_insert()
+        })
+        return pq
+
+    def update(self) -> PreparedCypherQuery:
+        if not self.id:
+            raise Exception(
+                "Cannot update an object that is not in the database (this object has "
+                "no ID)")
+        # TODO: Differential update only
+        pq = PreparedCypherQuery(self._update_query_str(), {
+            "id": self.id,
+            "props": self.serialize_for_neo4j_insert()
+        })
+        return pq
+
+    def delete(self) -> PreparedCypherQuery:
+        """
+        Deletes this object from the database.
+
+        Raises:
+            If the object is not in the database (i.e. it has no ID)
+        """
+        if not self.id:
+            # TODO: change this exception type
+            raise Exception(
+                "Cannot delete an object that is not in the database (this object has "
+                "no ID)")
+        pq = PreparedCypherQuery(self._delete_query_str(), {
+            "id": self.id
+        })
+        return pq
+
+    @classmethod
+    def _convert_record(cls, record):
+        """
+        Converts a neo4j record into this
+        """
+        return cls.parse_obj({
+            "id": record.id,
+            **dict(record.items())
+        })
+
 
 class BaseTwigObject(BaseDbObject[VK]):
     """
@@ -91,7 +149,20 @@ class BaseTwigObject(BaseDbObject[VK]):
 
     def add_relationship(self, other: VK):
         """
-        Adds a directed edge going from this resource to the destination resource.
+        Adds a directed edge going from this object to the other object.
+
+        Notes:
+            The cypher query string for adding a relationship is:
+            The `SRC_LABEL`, `DST_LABEL` and `RELATIONSHIP_LABEL` are meant
+            to be customized.
+
+            ```cypher
+            MATCH (src:SRC_LABEL),
+            (dst:DST_LABEL)
+            WHERE id(src) = $src_id AND id(dst) = $dst_id
+            CREATE (src)-[r:RELATIONSHIP_LABEL]->(dst)
+            RETURN id(r)
+            ```
         """
         # TODO: This will be quite useful, actually.
         raise NotImplementedError("Not done yet")

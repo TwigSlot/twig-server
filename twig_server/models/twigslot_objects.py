@@ -33,10 +33,9 @@ from pydantic.color import Color
 from twig_server.models import ResourceGraph
 from twig_server.models.db_objects import BaseTwigObject
 from twig_server.models.types import ResourceId, TagId, ProjectId
-from twig_server.neo4j_orm_lite.orm import TwigNeoModel
 
 
-class Tag(BaseTwigObject[TagId], TwigNeoModel[TagId]):
+class Tag(BaseTwigObject[TagId]):
     """
     Tags which can be applied to Resources.
     They sort of behave like Finder tags.
@@ -47,7 +46,7 @@ class Tag(BaseTwigObject[TagId], TwigNeoModel[TagId]):
     color: Color = Field(...)
 
 
-class Resource(BaseTwigObject[ResourceId], TwigNeoModel[TagId]):
+class Resource(BaseTwigObject[ResourceId]):
     """
     A TwigSlot Resource, usually a link to a webpage.
     However, could contain anything really.
@@ -77,7 +76,7 @@ class Resource(BaseTwigObject[ResourceId], TwigNeoModel[TagId]):
         raise NotImplementedError("Not done yet")
 
 
-class Project(BaseTwigObject[ProjectId], TwigNeoModel[ProjectId]):
+class Project(BaseTwigObject[ProjectId]):
     """
     Internal Representation of a TwigSlot Project
 
