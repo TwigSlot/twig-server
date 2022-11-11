@@ -105,6 +105,21 @@ class Project(BaseTwigObject[ProjectId], TwigNeoModel[ProjectId]):
         Args:
             resource: The resource to add.
 
+        Notes:
+            The Cypher query string for creating a resource is:
+
+            ```cypher
+            MATCH (p:project)
+            WHERE id(p) = $project_id
+            CREATE (p)-[:has_resource]->(r:resource)
+            SET r = $resource
+            RETURN id(r)
+            ```
+
+            and the parameters that need to be filled in are
+            `project_id` - obvious
+            `resource` - just serialize the resource for neo4j insert.
+
         Returns:
             None
         """

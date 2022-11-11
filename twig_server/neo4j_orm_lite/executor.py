@@ -18,7 +18,7 @@ from twig_server.neo4j_orm_lite.exceptions import (
     CreationFailure,
     ProjectNotFound,
 )
-from twig_server.neo4j_orm_lite.orm import CypherQueryString, Operation
+from twig_server.neo4j_orm_lite.query import CypherQueryString, Operation
 
 
 class CrappyNeo4jFakeOrm:
