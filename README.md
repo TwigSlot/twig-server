@@ -10,7 +10,7 @@ cp .env.example .env
 # make sure neo4j fully loaded before loading the rest, 
 # otherwise service "server" complains
 docker-compose up -d neo4j 
-docker-compose up logs -f neo4j 
+docker-compose logs -f neo4j 
 # after neo4j loaded you can bring up the rest
 docker-compose up -d 
 ```
