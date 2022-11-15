@@ -51,3 +51,7 @@ kratos:
             }
           }
         }
+kratos-selfservice-ui-node:
+  baseUrl: http://baseUrl
+  kratosBrowserUrl: http://dev.twigslot.com/auth
+  kratosPublicUrl: http://kratos-service:4433/

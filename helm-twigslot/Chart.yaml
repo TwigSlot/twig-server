@@ -26,3 +26,6 @@ dependencies:
   - name: kratos
     version: "0.26.0"
     repository: "@ory"
+  - name: kratos-selfservice-ui-node
+    version: "0.26.0"
+    repository: "@ory"
