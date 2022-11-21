@@ -247,3 +247,4 @@ kubernetes/secrets/*
 # for my own helper files when creating storageclasses from aws ebs
 # see AWS documentation for persistent volume deployment instructions
 kubernetes/temp/*
+helm-twigslot/charts

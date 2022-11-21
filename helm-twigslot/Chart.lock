@@ -5,5 +5,8 @@ dependencies:
 - name: kratos-selfservice-ui-node
   repository: https://k8s.ory.sh/helm/charts
   version: 0.26.0
-digest: sha256:12eb123627b7151bea583b42816fc7a62202fb78ae16af7b419804df60e4c8dd
-generated: "2022-11-15T13:04:13.48905+08:00"
+- name: traefik
+  repository: https://traefik.github.io/charts
+  version: 20.2.0
+digest: sha256:65e48e418cc969983df99df5542f491980fe520813de9be2f0a0bd4df0f4e58e
+generated: "2022-11-16T11:33:50.340352+08:00"
