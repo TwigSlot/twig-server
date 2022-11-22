@@ -1,3 +1,23 @@
+env:
+  - name: NEO4J_SERVER_URL
+    valueFrom:
+      secretKeyRef:
+        name: flask-credentials
+        key: NEO4J_SERVER_URL
+        optional: false
+  - name: NEO4J_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: flask-credentials
+        key: NEO4J_USERNAME
+        optional: false
+  - name: NEO4J_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: flask-credentials
+        key: NEO4J_PASSWORD
+        optional: false
+
 kratos:
   kratos:
     config:
@@ -51,6 +71,8 @@ kratos:
             }
           }
         }
+        
+
 kratos-selfservice-ui-node:
   baseUrl: http://baseUrl
   kratosBrowserUrl: http://dev.twigslot.com/auth
@@ -95,7 +117,7 @@ traefik:
   logs:
     # Configure log settings here...
     general:
-      level: ERROR
+      level: DEBUG
 
   ports:
     # Configure your entrypoints here...
@@ -131,7 +153,7 @@ traefik:
   # Disable Dashboard
   ingressRoute:
     dashboard:
-      enabled: false
+      enabled: true
 
   # Persistent Storage
   persistence:
