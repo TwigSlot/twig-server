@@ -1,3 +1,4 @@
+domainName: twigslot.com
 env:
   - name: NEO4J_SERVER_URL
     valueFrom:

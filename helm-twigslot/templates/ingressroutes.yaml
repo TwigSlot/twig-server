@@ -1,0 +1,63 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: middleware-auth
+spec:
+  forwardAuth:
+    address: http://oathkeeper-service:4456/decisions
+    authResponseHeaders:
+      - X-User
+      - Cookie
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: middleware-stripprefix
+spec:
+  stripPrefix:
+    prefixes:
+      - /auth
+      - /kratos
+      - /api
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: twig-ingress
+  namespace: default
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    - match: Host(`{{ .Values.domainName }}`) && PathPrefix(`/auth`)
+      kind: Rule
+      middlewares:
+        - name: middleware-stripprefix
+      services:
+        - name: selfservice-service
+          port: 4455
+    - match: Host(`{{ .Values.domainName }}`) && PathPrefix(`/kratos`)
+      kind: Rule
+      middlewares:
+        - name: middleware-stripprefix
+      services:
+        - name: kratos-service
+          port: 4433
+    - match: Host(`{{ .Values.domainName }}`) && PathPrefix(`/api`)
+      kind: Rule
+      middlewares:
+        - name: middleware-stripprefix
+        - name: middleware-auth
+      services:
+        - name: flask-service
+          port: 5000
+    - match: Path(`/test`)
+      kind: Rule
+      services:
+        - name: flask-service
+          port: 5000
+  # tls:
+  #   certResolver: myresolver
+  #   domains:
+  #   - main: {{ .Values.domainName }}
