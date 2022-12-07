@@ -165,4 +165,4 @@ class BaseTwigObject(BaseDbObject[VK]):
             ```
         """
         # TODO: This will be quite useful, actually.
-        raise NotImplementedError("Not done yet")
+        raise Exception("Not done yet")

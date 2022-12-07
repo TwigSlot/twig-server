@@ -30,8 +30,8 @@ from typing import Optional
 from pydantic import BaseModel, validator, Field
 from pydantic.color import Color
 
-from twig_server.models import ResourceGraph
 from twig_server.models.db_objects import BaseTwigObject
+from twig_server.models.twigslot_graph_objects import ResourceGraph
 from twig_server.models.types import ResourceId, TagId, ProjectId
 
 
