@@ -21,7 +21,12 @@ def test_create_project(neo4j_server, name, description, owner):
         proj = Project(name=name, description=description, owner=owner)
         sess.add(proj)
         print(sess.show_query())
-        sess.commit()
+        proj_id = sess.commit()
+        proj_id = proj_id[0]
+        assert proj_id is not None
+        proj_get = sess.get(proj_id)
+        assert isinstance(proj_get, Project)
+
     #
     # del_query = proj.delete()
     # with twig4j_orm.conn.session() as sess:
