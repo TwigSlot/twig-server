@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: demo
+  namespace: default
+spec:
+  secretName: demo
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: 18474e58-3ab2-4e5f-84f8-310e7c7aee81.lb.civo.com
+  dnsNames:
+  - 18474e58-3ab2-4e5f-84f8-310e7c7aee81.lb.civo.com
