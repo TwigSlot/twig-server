@@ -25,7 +25,7 @@ metadata:
   name: nginx-demo
   namespace: default
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: nginx-demo
   ports:

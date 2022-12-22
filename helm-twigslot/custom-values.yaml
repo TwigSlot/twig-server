@@ -1,4 +1,4 @@
-domainName: twigslot.com
+domainName: staging.twigslot.com
 env:
   - name: NEO4J_SERVER_URL
     valueFrom:
@@ -76,7 +76,7 @@ kratos:
 
 kratos-selfservice-ui-node:
   baseUrl: http://baseUrl
-  kratosBrowserUrl: http://dev.twigslot.com/auth
+  kratosBrowserUrl: http://dev.staging.twigslot.com/auth
   kratosPublicUrl: http://kratos-service:4433/
 
 

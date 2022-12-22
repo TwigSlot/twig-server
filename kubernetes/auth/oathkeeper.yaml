@@ -37,6 +37,5 @@ spec:
     - protocol: TCP
       port: 4456
       targetPort: 4456
-      nodePort: 30007
       name: http
-  type: LoadBalancer
+  type: ClusterIP

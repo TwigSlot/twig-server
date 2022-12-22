@@ -8,11 +8,11 @@ metadata:
 spec:
   tls:
   - hosts:
-    - twigslot.com
+    - staging.twigslot.com
     - twig.tchlabs.net
     secretName: twig-ingress-tls
   rules:
-    - host: twigslot.com
+    - host: staging.twigslot.com
       http:
         paths:
           - path: /
@@ -32,7 +32,7 @@ spec:
                 name: traefik
                 port:
                   number: 80
-    - host: www.twigslot.com
+    - host: www.staging.twigslot.com
       http:
         paths:
           - path: /

@@ -13,7 +13,7 @@ spec:
       services:
         - name: redirect-service
           port: 80
-    - match: Host(`www.twigslot.com`)
+    - match: Host(`www.staging.twigslot.com`)
       kind: Rule
       services:
         - name: redirect-service

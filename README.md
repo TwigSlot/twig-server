@@ -1,6 +1,6 @@
 # Twig Server
 
-Server for [twigslot.com](https://twigslot.com)
+Server for [staging.twigslot.com](https://staging.twigslot.com)
 
 ## Development Setup
 ```shell

@@ -1,5 +1,40 @@
 # Instructions
 
+## Starting a DigitalOcean cluster
+```
+doctl kubernetes cluster create test --count=2 --region=sgp1
+k get node
+cd kubernetes
+```
+## Setting up PV and PVC
+```bash
+doctl compute volume create testvolume1 --region=sgp1 --size=1GiB
+# edit twig-do-pv.yaml to have the correct volumeHandle
+k apply -f config/twig-do-pv.yaml
+k apply -f config/twig-do-pvc.yaml
+k describe pvc
+```
+## Auth
+```bash
+k apply -f config/configmap-kratos.yaml
+k get cm
+k apply -f config/twig-sqlite-migration.yaml
+k get pod --watch # watch until "Completed"
+```
+
+### Kratos & Self-Service
+```bash
+k apply -f kubernetes/auth/twig-auth-service.yaml
+k get svc
+k port-forward svc/selfservice-service 4455 # 4455->3000
+k port-forward svc/kratos-service 4433
+```
+Visit `localhost:4455` and one should expect a login page.
+
+Visit `localhost:4433/sessions/whoami` and one should expect
+```
+{"error":{"code":401,"status":"Unauthorized","reason":"No valid session cookie found.","message":"The request could not be authorized"}}
+```
 ## Secrets
 ```
 k apply -f kubernetes/secrets/cloudflare-credentials.yaml

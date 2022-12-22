@@ -17,7 +17,7 @@ spec:
     - web
     - websecure
   routes:
-    - match: Host(`twigslot.com`) && PathPrefix(`/autofill`)
+    - match: Host(`staging.twigslot.com`) && PathPrefix(`/autofill`)
       kind: Rule
       middlewares:
         - name: middleware-stripprefix-autofill
@@ -27,4 +27,4 @@ spec:
   # tls:
   #   certResolver: myresolver
   #   domains: 
-  #   - main: twigslot.com
+  #   - main: staging.twigslot.com

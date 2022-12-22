@@ -23,9 +23,9 @@ spec:
         - name: KRATOS_PUBLIC_URL
           value: http://kratos-service:4433/
         - name: KRATOS_BROWSER_URL
-          value: https://twigslot.com/kratos
+          value: https://staging.twigslot.com/kratos
         - name: BASE_PATH
-          value: https://twigslot.com/auth
+          value: https://staging.twigslot.com/auth
 ---
 apiVersion: v1
 kind: Service
@@ -39,7 +39,7 @@ spec:
       port: 4455
       targetPort: 3000
       # nodePort: 30000
-  type: LoadBalancer
+  type: ClusterIP
 ---
 apiVersion: apps/v1
 kind: StatefulSet
