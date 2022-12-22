@@ -17,7 +17,7 @@ spec:
     - web
     - websecure
   routes:
-    - match: Host(`staging.twigslot.com`) && PathPrefix(`/autofill`)
+    - match: PathPrefix(`/autofill`)
       kind: Rule
       middlewares:
         - name: middleware-stripprefix-autofill

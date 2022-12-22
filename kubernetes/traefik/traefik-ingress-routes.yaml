@@ -37,7 +37,7 @@ spec:
       services:
         - name: selfservice-service
           port: 4455
-    - match: Host(`staging.twigslot.com`) && PathPrefix(`/kratos`)
+    - match: PathPrefix(`/kratos`)
       kind: Rule
       middlewares:
         - name: middleware-stripprefix

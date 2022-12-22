@@ -14,9 +14,12 @@ spec:
     spec:
       containers:
       - name: nginx-container
-        image: tch1001/twig_client:v3.1.1
+        image: tch1001/twig_client:v4.3.2
         ports:
         - containerPort: 80
+        env:
+          - name: VITE_AUTH_URL
+            value: https://staging.twigslot.com/auth
 ---
 apiVersion: v1
 kind: Service
@@ -29,5 +32,5 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 80
-      nodePort: 30002
+#      nodePort: 30002
   type: ClusterIP
