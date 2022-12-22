@@ -71,6 +71,7 @@ k apply -f kubernetes/client/traefik-ingress-client.yaml
 k apply -f kubernetes/autofill/traefik-ingress-routes.yaml 
 k apply -f kubernetes/traefik/traefik-ingress-routes.yaml
 ```
+
 ### Microk8s Ingress
 Because microk8s is self hosted, we need to setup our own ingress controller (for AWS it was conveniently and expensively AWS ELB).
 ```bash

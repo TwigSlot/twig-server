@@ -15,15 +15,15 @@ spec:
     - protocol: TCP
       name: web
       port: 80
-      nodePort: 30003
+#      nodePort: 30003
     - protocol: TCP
       name: admin
       port: 8080
-      nodePort: 30004
+#      nodePort: 30004
     - protocol: TCP
       name: websecure
       port: 443
-      nodePort: 30005
+#      nodePort: 30005
   selector:
     app: traefik
 ---
@@ -50,7 +50,7 @@ spec:
         - name: traefik
           image: traefik:v2.8
           args:
-            # - --api.insecure
+            - --api.insecure
             # - --accesslog
             - --entrypoints.web.Address=:80
             # - --entrypoints.web.http.redirections.entryPoint.to=websecure

@@ -35,6 +35,54 @@ Visit `localhost:4433/sessions/whoami` and one should expect
 ```
 {"error":{"code":401,"status":"Unauthorized","reason":"No valid session cookie found.","message":"The request could not be authorized"}}
 ```
+
+### Oathkeeper Deployment
+```bash
+k apply -f config/configmap-oathkeeper.yaml
+k apply -f auth/oathkeeper.yaml
+```
+
+## Traefik
+```bash
+k apply -f secrets/cloudflare-secret.yaml
+vim traefik/traefik-cf-server.yaml # - --api.insecure=true
+k apply -f traefik/traefik-cf-server.yaml
+k get svc
+```
+Dashboard will be at `<external-ip>:8080/dashboard`
+
+### Traefik IngressRoutes
+We can refer to this [guide](https://doc.traefik.io/traefik/user-guides/crd-acme/).
+```bash
+k apply -f https://raw.githubusercontent.com/traefik/traefik/v2.8/docs/content/reference/dynamic-configuration/kubernetes-crd-definition-v1.yml
+k apply -f https://raw.githubusercontent.com/traefik/traefik/v2.8/docs/content/reference/dynamic-configuration/kubernetes-crd-rbac.yml
+k apply -f client/traefik-ingress-client.yaml
+k apply -f autofill/traefik-ingress-routes.yaml 
+k apply -f traefik/traefik-ingress-routes.yaml
+```
+Visit `http://<external-ip>/kratos/sessions/whoami` and it should yield 
+``` 
+{"error":{"code":401,"status":"Unauthorized","reason":"No valid session cookie found.","message":"The request could not be authorized"}}
+```
+## Domain
+Point your domain `staging.twigslot.com` to the external IP of `k get svc traefik`. 
+
+### You are confident of SSL setup
+To check if you got a cert, you can do
+``` 
+k exec -it svc/traefik -- sh 
+cat ssl-certs/acme-cloudflare.json 
+```
+If it is blank, go take a shit, vomit blood, and come back later (patience is key? just wait it out, mine actually appeared soon after).
+
+### You are NOT confident of SSL setup
+If you're using cloudflare (I am), ***remember*** to set SSL/TLS to `Flexible` while testing (***don't*** do this in production, lessons were learnt the hard way).
+
+### Testing
+Visit `https://staging.twigslot.com/kratos/sessions/whoami` and it should work.
+
+Visit `https://staging.twigslot.com/auth/login` and it should work. For the record, I wasted 4h of my life because I missed out the `/login` so don't be dumb like me.
+
 ## Secrets
 ```
 k apply -f kubernetes/secrets/cloudflare-credentials.yaml
@@ -66,12 +114,6 @@ Replace `blueberry` with whatever you want to name it.
 Kubernetes Ingress is a PITA to setup locally... commonly people run into `<pending> External IP`  issues.
 
 I might try proxmox in future, but for now I just use civo. It's the cheapest that comes with a LB.
-
-## Traefik
-```
-kubectl port-forward $(kubectl get pods --selector "app.kubernetes.io/name=traefik" --output=name) 9000:9000
-```
-Dashboard will be at `localhost:9000/dashboard`
 
 ## Kratos
 There are 

@@ -30,7 +30,7 @@ spec:
     - web
     - websecure
   routes:
-    - match: Host(`staging.twigslot.com`) && PathPrefix(`/auth`)
+    - match: PathPrefix(`/auth`)
       kind: Rule
       middlewares:
         - name: middleware-stripprefix
@@ -44,7 +44,7 @@ spec:
       services:
         - name: kratos-service
           port: 4433
-    - match: Host(`staging.twigslot.com`) && PathPrefix(`/api`)
+    - match: PathPrefix(`/api`)
       kind: Rule
       middlewares:
         - name: middleware-stripprefix
