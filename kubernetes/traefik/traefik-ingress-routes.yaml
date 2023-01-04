@@ -24,7 +24,6 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: twig-ingress
-  namespace: default
 spec:
   entryPoints:
     - web
@@ -37,6 +36,7 @@ spec:
       services:
         - name: selfservice-service
           port: 4455
+          namespace: twigslot
     - match: PathPrefix(`/kratos`)
       kind: Rule
       middlewares:
@@ -44,6 +44,7 @@ spec:
       services:
         - name: kratos-service
           port: 4433
+          namespace: twigslot
     - match: PathPrefix(`/api`)
       kind: Rule
       middlewares:
@@ -57,6 +58,7 @@ spec:
       services:
         - name: flask-service
           port: 5000
+          namespace: twigslot
   # tls:
   #   certResolver: myresolver
   #   domains: 

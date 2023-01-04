@@ -18,6 +18,6 @@ spec:
   csi:
     driver: dobs.csi.digitalocean.com
     fsType: ext4
-    volumeHandle: dc458585-8194-11ed-a456-0a58ac14a167
+    volumeHandle: 3dee7c2f-8bee-11ed-873e-0a58ac14a419
     volumeAttributes:
       com.digitalocean.csi/noformat: "true"

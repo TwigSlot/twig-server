@@ -8,11 +8,11 @@ spec:
     - web
     - websecure
   routes:
-    - match: Host(`staging.twigslot.com`)
-      kind: Rule
-      services:
-        - name: nginx-service
-          port: 80
+  - match: Host(`staging.twigslot.com`)
+    kind: Rule
+    services:
+      - name: nginx-service
+        port: 80
   # tls:
   #   certResolver: myresolver
   #   domains: 

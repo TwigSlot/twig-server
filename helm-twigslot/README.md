@@ -9,8 +9,10 @@ cd kubernetes
 ## Setting up PV and PVC
 ```bash
 doctl compute volume create testvolume1 --region=sgp1 --size=1GiB
-# edit twig-do-pv.yaml to have the correct volumeHandle
+# IMPT: edit twig-do-pv.yaml to have the correct volumeHandle
 k apply -f config/twig-do-pv.yaml
+k create ns twigslot # create namespace "twigslot"
+kubens twigslot
 k apply -f config/twig-do-pvc.yaml
 k describe pvc
 ```
@@ -24,7 +26,7 @@ k get pod --watch # watch until "Completed"
 
 ### Kratos & Self-Service
 ```bash
-k apply -f kubernetes/auth/twig-auth-service.yaml
+k apply -f auth/twig-auth-service.yaml
 k get svc
 k port-forward svc/selfservice-service 4455 # 4455->3000
 k port-forward svc/kratos-service 4433
@@ -43,6 +45,7 @@ k apply -f auth/oathkeeper.yaml
 ```
 
 ## Traefik
+Deploy the following in the `default` namespace.
 ```bash
 k apply -f secrets/cloudflare-secret.yaml
 vim traefik/traefik-cf-server.yaml # - --api.insecure=true
@@ -51,14 +54,21 @@ k get svc
 ```
 Dashboard will be at `<external-ip>:8080/dashboard`
 
+Tip: If you forgot to apply `cloudflare-secret` before creating the service, you can restart by using 
+```
+k rollout restart deployment/traefik
+```
+because deleting and applying takes a long time for the LB to spin up.
+
 ### Traefik IngressRoutes
 We can refer to this [guide](https://doc.traefik.io/traefik/user-guides/crd-acme/).
 ```bash
-k apply -f https://raw.githubusercontent.com/traefik/traefik/v2.8/docs/content/reference/dynamic-configuration/kubernetes-crd-definition-v1.yml
-k apply -f https://raw.githubusercontent.com/traefik/traefik/v2.8/docs/content/reference/dynamic-configuration/kubernetes-crd-rbac.yml
-k apply -f client/traefik-ingress-client.yaml
-k apply -f autofill/traefik-ingress-routes.yaml 
+k apply -f https://raw.githubusercontent.com/traefik/traefik/v2.9/docs/content/reference/dynamic-configuration/kubernetes-crd-definition-v1.yml
+k apply -f https://raw.githubusercontent.com/traefik/traefik/v2.9/docs/content/reference/dynamic-configuration/kubernetes-crd-rbac.yml
+# be careful about namespacing
 k apply -f traefik/traefik-ingress-routes.yaml
+# if the route doesnt appear in the dashboard, 
+# chances are that the service doesn't exist yet
 ```
 Visit `http://<external-ip>/kratos/sessions/whoami` and it should yield 
 ``` 
