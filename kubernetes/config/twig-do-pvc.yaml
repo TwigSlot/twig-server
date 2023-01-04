@@ -9,3 +9,16 @@ spec:
     requests:
       storage: 1Gi
   storageClassName: do-block-storage
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: traefik-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Mi
+  storageClassName: do-block-storage

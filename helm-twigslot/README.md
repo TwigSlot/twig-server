@@ -60,6 +60,12 @@ k rollout restart deployment/traefik
 ```
 because deleting and applying takes a long time for the LB to spin up.
 
+**BUT** the above will only work for `deployment`, not stateful set. for `statefulset` just delete the `statefulset` and recreate it using 
+```
+k delete statefulset traefik
+k apply -f auth/traefik-cf-server.yaml
+```
+
 ### Traefik IngressRoutes
 We can refer to this [guide](https://doc.traefik.io/traefik/user-guides/crd-acme/).
 ```bash

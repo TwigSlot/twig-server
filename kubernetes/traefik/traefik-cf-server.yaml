@@ -27,7 +27,7 @@ spec:
   selector:
     app: traefik
 ---
-kind: Deployment
+kind: StatefulSet
 apiVersion: apps/v1
 metadata:
   namespace: default
@@ -45,6 +45,10 @@ spec:
       labels:
         app: traefik
     spec:
+      volumes:
+        - name: traefik-tls-certs
+          persistentVolumeClaim:
+            claimName: traefik-pvc
       serviceAccountName: traefik-ingress-controller
       containers:
         - name: traefik
@@ -58,6 +62,7 @@ spec:
             - --entrypoints.websecure.Address=:443
             - --providers.kubernetescrd
             - --providers.file.directory=/etc/traefik/dynamic
+            - --providers.file.watch=true
 
             # TLS challenge
             # - --certificatesresolvers.myresolver.acme.tlschallenge
@@ -93,3 +98,6 @@ spec:
               containerPort: 443
             - name: admin
               containerPort: 8080
+          volumeMounts:
+            - name: traefik-tls-certs
+              mountPath: /etc/traefik/dynamic
