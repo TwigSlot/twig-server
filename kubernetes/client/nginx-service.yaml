@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: nginx-container
-        image: tch1001/twig_client:v4.3.2
+        image: tch1001/twig_client:v4.3.4
         ports:
         - containerPort: 80
         env:

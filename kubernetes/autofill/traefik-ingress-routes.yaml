@@ -23,7 +23,7 @@ spec:
       services:
         - name: autofill-service
           port: 5000
-  # tls:
-  #   certResolver: myresolver
-  #   domains: 
-  #   - main: staging.twigslot.com
+  tls:
+    certResolver: acme-secret
+    domains:
+    - main: twigslot.com

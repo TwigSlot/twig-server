@@ -8,7 +8,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: traefik
-
 spec:
   type: LoadBalancer
   ports:
@@ -27,14 +26,13 @@ spec:
   selector:
     app: traefik
 ---
-kind: StatefulSet
 apiVersion: apps/v1
+kind: Deployment
 metadata:
   namespace: default
   name: traefik
   labels:
     app: traefik
-
 spec:
   replicas: 1
   selector:
@@ -45,10 +43,6 @@ spec:
       labels:
         app: traefik
     spec:
-      volumes:
-        - name: traefik-tls-certs
-          persistentVolumeClaim:
-            claimName: traefik-pvc
       serviceAccountName: traefik-ingress-controller
       containers:
         - name: traefik
@@ -57,27 +51,8 @@ spec:
             - --api.insecure=true
             - --accesslog
             - --entrypoints.web.Address=:80
-            # - --entrypoints.web.http.redirections.entryPoint.to=websecure
-            # - --entrypoints.web.http.redirections.entryPoint.scheme=https
             - --entrypoints.websecure.Address=:443
             - --providers.kubernetescrd
-            - --providers.file.directory=/etc/traefik/dynamic
-            - --providers.file.watch=true
-
-            # TLS challenge
-            # - --certificatesresolvers.myresolver.acme.tlschallenge
-            # - --certificatesresolvers.myresolver.acme.email=foo@you.com
-            # - --certificatesresolvers.myresolver.acme.storage=acme.json
-            # # Please note that this is the staging Let's Encrypt server.
-            # # Once you get things working, you should remove that whole line altogether.
-            # - --certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
-
-            # DNS challenge
-            - --certificatesresolvers.myresolver.acme.dnschallenge=true
-            - --certificatesresolvers.myresolver.acme.email=tanchienhao@gmail.com
-            - --certificatesresolvers.myresolver.acme.storage=acme.json
-            - --certificatesresolvers.myresolver.acme.dnschallenge.provider=cloudflare
-            - --certificatesresolvers.myresolver.acme.dnschallenge.delaybeforecheck=0
           env:
             - name: CF_API_KEY
               valueFrom:
@@ -98,6 +73,3 @@ spec:
               containerPort: 443
             - name: admin
               containerPort: 8080
-          volumeMounts:
-            - name: traefik-tls-certs
-              mountPath: /etc/traefik/dynamic

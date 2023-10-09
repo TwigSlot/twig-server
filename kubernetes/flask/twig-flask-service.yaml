@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: flask-deployment
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: flask-pod
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: flask-container
-        image: tch1001/twig_server:v3.0.0
+        image: tch1001/twig_server:v4.1.1
         env: 
           - name: NEO4J_SERVER_URL
             valueFrom:
@@ -49,5 +49,4 @@ spec:
     - protocol: TCP
       port: 5000
       targetPort: 5000
-      nodePort: 30001
   type: ClusterIP

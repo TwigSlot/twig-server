@@ -2,7 +2,6 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: redirect-old-twig
-  namespace: default
 spec:
   entryPoints:
     - web
@@ -13,7 +12,7 @@ spec:
       services:
         - name: redirect-service
           port: 80
-    - match: Host(`www.staging.twigslot.com`)
+    - match: Host(`www.twigslot.com`)
       kind: Rule
       services:
         - name: redirect-service

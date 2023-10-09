@@ -84,7 +84,8 @@ vim kubernetes/traefik/traefik-cf-server.yaml
 k apply -f kubernetes/traefik/traefik-microk8-ingress.yaml
 k apply -f kubernetes/traefik/traefik-cf-server.yaml
 ```
-check `http://staging.twigslot.com` and subpaths `/api`, `/auth`, `/kratos`.
+check `http://staging.twigslot.com` and subpaths `/twig-api`, `/auth`, `/kratos/health/alive`.
+If redirected to https, choose another domain name (caching is annoying).
 
 ### TLS for Nginx Ingress
 ```bash

@@ -244,6 +244,7 @@ cython_debug/
 .DS_Store
 **/.DS_Store
 kubernetes/secrets/*
+kubernetes/certs/*
 # for my own helper files when creating storageclasses from aws ebs
 # see AWS documentation for persistent volume deployment instructions
 kubernetes/temp/*

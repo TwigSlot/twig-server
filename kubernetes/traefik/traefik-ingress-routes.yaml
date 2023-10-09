@@ -4,7 +4,7 @@ metadata:
   name: middleware-auth
 spec:
   forwardAuth:
-    address: http://oathkeeper-service:4456/decisions
+    address: http://oathkeeper-service.twigslot:4456/decisions
     authResponseHeaders: 
       - X-User
       - Cookie
@@ -18,15 +18,15 @@ spec:
     prefixes:
       - /auth
       - /kratos
-      - /api
+      - /twig-api
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: twig-ingress
+  namespace: twigslot
 spec:
   entryPoints:
-    - web
     - websecure
   routes:
     - match: PathPrefix(`/auth`)
@@ -36,7 +36,6 @@ spec:
       services:
         - name: selfservice-service
           port: 4455
-          namespace: twigslot
     - match: PathPrefix(`/kratos`)
       kind: Rule
       middlewares:
@@ -44,8 +43,7 @@ spec:
       services:
         - name: kratos-service
           port: 4433
-          namespace: twigslot
-    - match: PathPrefix(`/api`)
+    - match: PathPrefix(`/twig-api`) 
       kind: Rule
       middlewares:
         - name: middleware-stripprefix
@@ -58,8 +56,9 @@ spec:
       services:
         - name: flask-service
           port: 5000
-          namespace: twigslot
-  # tls:
-  #   certResolver: myresolver
-  #   domains: 
-  #   - main: staging.twigslot.com
+  tls:
+    secretName: acme-secret
+    domains:
+    - main: twigslot.com
+      sans:
+      - staging2.twigslot.com

@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: autofill-deployment
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: autofill-pod
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: autofill-container
-        image: tch1001/autofill_server:latest
+        image: tch1001/autofill_server:v1.2
         ports:
         - containerPort: 5000
         env:
@@ -36,5 +36,5 @@ spec:
     - protocol: TCP
       port: 5000
       targetPort: 5000
-      nodePort: 31001
+#      nodePort: 31001
   type: ClusterIP

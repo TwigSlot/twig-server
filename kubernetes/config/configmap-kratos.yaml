@@ -10,11 +10,11 @@ data:
 
     serve:
       public:
-        base_url: https://staging.twigslot.com/kratos
+        base_url: https://twigslot.com/kratos
         cors:
           enabled: true
           allowed_origins:
-            - https://staging.twigslot.com
+            - https://twigslot.com
             - http://localhost:5173
           allowed_methods:
             - POST
@@ -26,9 +26,9 @@ data:
         base_url: http://kratos-service:4434/
 
     selfservice:
-      default_browser_return_url: https://staging.twigslot.com
+      default_browser_return_url: https://twigslot.com
       allowed_return_urls:
-        - https://staging.twigslot.com/auth
+        - https://twigslot.com/auth
 
       methods:
         password:
@@ -36,29 +36,29 @@ data:
 
       flows:
         error:
-          ui_url: https://staging.twigslot.com/auth/error
+          ui_url: https://twigslot.com/auth/error
 
         settings:
-          ui_url: https://staging.twigslot.com/auth/settings
+          ui_url: https://twigslot.com/auth/settings
           privileged_session_max_age: 15m
           after:
-            default_browser_return_url: https://staging.twigslot.com
+            default_browser_return_url: https://twigslot.com
 
         recovery:
           enabled: true
-          ui_url: https://staging.twigslot.com/auth/recovery
+          ui_url: https://twigslot.com/auth/recovery
 
         verification:
           enabled: true
-          ui_url: https://staging.twigslot.com/auth/verification
+          ui_url: https://twigslot.com/auth/verification
 
         login:
-          ui_url: https://staging.twigslot.com/auth/login
+          ui_url: https://twigslot.com/auth/login
           lifespan: 10m
 
         registration:
           lifespan: 10m
-          ui_url: https://staging.twigslot.com/auth/registration
+          ui_url: https://twigslot.com/auth/registration
           after:
             password:
               hooks:

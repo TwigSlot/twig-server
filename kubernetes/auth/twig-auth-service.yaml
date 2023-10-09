@@ -23,9 +23,9 @@ spec:
         - name: KRATOS_PUBLIC_URL
           value: http://kratos-service:4433/
         - name: KRATOS_BROWSER_URL
-          value: https://staging.twigslot.com/kratos
+          value: https://twigslot.com/kratos
         - name: BASE_PATH
-          value: https://staging.twigslot.com/auth
+          value: https://twigslot.com/auth
 ---
 apiVersion: v1
 kind: Service

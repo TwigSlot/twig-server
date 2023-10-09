@@ -1,0 +1,14 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: twig-redirect-http
+  namespace: twigslot
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`twigslot.com`)
+      kind: Rule
+      services:
+        - name: redirect-service
+          port: 80
