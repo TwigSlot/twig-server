@@ -1,7 +1,7 @@
 # Useful commands
 these references are for myself
 ```shell
-docker-compose -f containers/keto/docker-compose.yml up -d keto keto-init
+docker-compose -f docker-compose.yml -f containers/keto/docker-compose.yml up -d keto keto-init
 ssh docker@$(docker-machine ip default) -N -f \
     -L 4466:localhost:4466 \
     -L 4467:localhost:4467

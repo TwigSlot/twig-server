@@ -13,7 +13,7 @@ services:
     networks:
       - internal
     ports:
-      - "5000:5000"
+      - "5001:5000"
   neo4j:
     image: neo4j:4.4.9
     ports:
